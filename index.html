@@ -1,0 +1,3460 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>LaTeX to Image Tool</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700;800&family=Noto+Sans:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.2.0/css/all.min.css">
+<script>
+window.MathJax = {
+  tex: {
+    packages: { "[+]": ["color"] },
+    macros: {
+      style: ["\\bbox[border:0px;#1]{#2}", 2]
+    }
+  }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<style>
+:root {
+  --grey-0: #494949;
+  --grey-1: #707070;
+  --grey-2: #969696;
+  --grey-3: #dcdcdc;
+  --blue: #65b2ff;
+  --orange: #ffc965;
+
+  --bg: #ffffff;
+  --bg-alt: #f8f8f8;
+  --bg-code: #f3f3f3;
+  --text: #333333;
+  --text-secondary: #555555;
+  --text-muted: #969696;
+  --border: #dcdcdc;
+  --border-subtle: #ebebeb;
+
+  --btn-bg: #494949;
+  --btn-hover: #6a6a6a;
+  --btn-text: #ffffff;
+  --btn-hover-bg: rgba(0, 0, 0, 0.06);
+  --heading-accent: #1397a6;
+
+  --table-highlight: rgba(101, 178, 255, 0.12);
+  --selection-bg: rgba(101, 178, 255, 0.24);
+  --selection-text: #1f2a39;
+  --theme-toggle-accent: #f2b356;
+  --error-text: #d73434;
+  --res-track: #c8d4d8;
+  --res-track-hover: #b5c5ce;
+  --res-track-active: #a0bbc6;
+  --res-thumb: #1397a6;
+  --res-thumb-hover: #17aabc;
+  --res-thumb-active: #2ec7d8;
+  --res-thumb-border: #0e7480;
+  --res-thumb-hover-border: #118693;
+  --res-thumb-active-border: #1aa6b5;
+  --footer-link-hover: #ff9f1c;
+
+  --radius: 8px;
+  --radius-sm: 4px;
+  --radius-pill: 50px;
+  --panel-inner-pad: 10px;
+  --preview-min-height: 50px;
+  --macro-btn-width: 54px;
+  --macro-btn-height: 40px;
+  --macro-btn-scale-matrix: 1.2;
+  --macro-btn-scale-display-op: 1.2;
+  --macro-icon-max-height: 19px;
+  --macro-icon-min-height: 11px;
+  --macro-icon-nominal-height: 14px;
+  --macro-icon-max-width: 42px;
+  --macro-icon-max-height-compact: 15px;
+  --macro-icon-min-height-compact: 8px;
+  --macro-icon-nominal-height-compact: 11px;
+  --macro-icon-max-width-compact: 34px;
+  --macro-icon-max-width-matrix: 50px;
+  --macro-icon-max-height-matrix: 23px;
+  --macro-icon-min-height-matrix: 13px;
+  --macro-icon-nominal-height-matrix: 17px;
+  --heading-accent-hover: #22adba;
+}
+
+[data-theme="dark"] {
+  --bg: #1e2130;
+  --bg-alt: #252838;
+  --bg-code: #282b3a;
+  --text: #e0e0e0;
+  --text-secondary: #aaaaaa;
+  --text-muted: #777777;
+  --border: #3a3d4e;
+  --border-subtle: #2e3142;
+
+  --btn-bg: #3a3d4e;
+  --btn-hover: #525672;
+  --btn-text: #e0e0e0;
+  --btn-hover-bg: rgba(255, 255, 255, 0.08);
+  --heading-accent: #41b8ca;
+
+  --table-highlight: rgba(101, 178, 255, 0.18);
+  --selection-bg: rgba(101, 178, 255, 0.32);
+  --selection-text: #eaf2ff;
+  --theme-toggle-accent: #ffd179;
+  --error-text: #ff7a86;
+  --heading-accent-hover: #63cfdf;
+  --res-track: #3b4a55;
+  --res-track-hover: #4d6172;
+  --res-track-active: #617986;
+  --res-thumb: #41b8ca;
+  --res-thumb-hover: #5fd2e7;
+  --res-thumb-active: #82e7f7;
+  --res-thumb-border: #2c98aa;
+  --res-thumb-hover-border: #41b8cc;
+  --res-thumb-active-border: #5ecedf;
+  --footer-link-hover: #ffb347;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  overflow-y: scroll;
+}
+
+body {
+  margin: 18px auto 24px;
+  padding: 0 16px;
+  max-width: 1000px;
+  font-family: "Roboto", "Noto Sans", sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  background: var(--bg);
+  color: var(--text);
+  transition: background 0.25s, color 0.25s;
+}
+
+h1,
+h3,
+h4,
+p {
+  margin: 0;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+#themeToggle {
+  position: fixed;
+  top: 1em;
+  right: 1.2em;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  background: var(--bg);
+  color: var(--text-muted);
+  font-size: 15px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  margin: 0;
+  padding: 0;
+  transition: color 0.2s, border-color 0.2s, background 0.25s;
+}
+
+#themeToggle:hover {
+  color: var(--theme-toggle-accent);
+  border-color: var(--theme-toggle-accent);
+}
+
+.page-header {
+  margin-bottom: 12px;
+}
+
+.page-header h1 {
+  font-size: clamp(30px, 5.2vw, 44px);
+  letter-spacing: -0.02em;
+  line-height: 1.08;
+  margin-bottom: 4px;
+}
+
+.page-header p {
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.tool-card,
+.preview-section {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  background: var(--bg-alt);
+  padding: 10px;
+  transition: border-color 0.25s, background 0.25s;
+}
+
+.tool-card + .tool-card,
+.tool-card + .preview-section,
+.preview-section + .tool-card {
+  margin-top: 12px;
+}
+
+.field-label,
+.section-heading {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.field-label i,
+.section-heading i {
+  color: var(--heading-accent);
+}
+
+.input-header-row {
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.input-header-row .field-label {
+  margin-bottom: 0;
+}
+
+.input-help {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+#helpToggleBtn {
+  padding: 4px 8px;
+  font-size: 12px;
+  gap: 5px;
+}
+
+#helpToggleBtn i {
+  color: var(--heading-accent);
+  font-size: 12px;
+}
+
+#helpPanel {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 248px;
+  max-width: min(360px, calc(100vw - 34px));
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.16);
+  display: none;
+  z-index: 185;
+}
+
+#helpPanel.open {
+  display: block;
+}
+
+#helpPanel h4 {
+  margin: 0 0 6px;
+  font-size: 12px;
+  letter-spacing: 0.01em;
+  color: var(--text-secondary);
+}
+
+#helpPanel ul {
+  margin: 0;
+  padding-left: 16px;
+  display: grid;
+  gap: 4px;
+}
+
+#helpPanel li {
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--text-secondary);
+}
+
+#helpPanel code {
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  background: var(--bg-alt);
+  color: var(--text);
+  font-size: 11px;
+  padding: 1px 4px;
+}
+
+textarea {
+  width: 100%;
+  min-height: 140px;
+  resize: vertical;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  padding: 10px 12px;
+  font-size: 16px;
+  line-height: 1.45;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+textarea::selection {
+  background: var(--selection-bg);
+  color: var(--selection-text);
+}
+
+textarea::-moz-selection {
+  background: var(--selection-bg);
+  color: var(--selection-text);
+}
+
+textarea:focus-visible,
+input:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--heading-accent);
+  outline-offset: 2px;
+}
+
+.controls {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+  align-items: center;
+}
+
+.control-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+#resolutionSlider {
+  width: 120px;
+  height: 18px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  --res-track-current: var(--res-track);
+  --res-thumb-current: var(--res-thumb);
+  --res-thumb-border-current: var(--res-thumb-border);
+  --res-fill: 0%;
+}
+
+#resolutionSlider::-webkit-slider-runnable-track {
+  height: 8px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  background: linear-gradient(
+    to right,
+    var(--res-thumb-current) 0%,
+    var(--res-thumb-current) var(--res-fill),
+    var(--res-track-current) var(--res-fill),
+    var(--res-track-current) 100%
+  );
+  transition: background 0.18s, border-color 0.18s;
+}
+
+#resolutionSlider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  margin-top: -5px;
+  border-radius: 50%;
+  border: 1px solid var(--res-thumb-border-current);
+  background: var(--res-thumb-current);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  transition: background 0.18s, border-color 0.18s, transform 0.18s;
+}
+
+#resolutionSlider::-moz-range-track {
+  height: 8px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  background: var(--res-track-current);
+  transition: background 0.18s, border-color 0.18s;
+}
+
+#resolutionSlider::-moz-range-progress {
+  height: 8px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  background: var(--res-thumb-current);
+}
+
+#resolutionSlider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid var(--res-thumb-border-current);
+  background: var(--res-thumb-current);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  transition: background 0.18s, border-color 0.18s, transform 0.18s;
+}
+
+#resolutionSlider[data-hover-zone] {
+  --res-track-current: var(--res-track-hover);
+  --res-thumb-current: var(--res-thumb-hover);
+  --res-thumb-border-current: var(--res-thumb-hover-border);
+}
+
+#resolutionSlider[data-active-zone] {
+  --res-track-current: var(--res-track-active);
+  --res-thumb-current: var(--res-thumb-active);
+  --res-thumb-border-current: var(--res-thumb-active-border);
+}
+
+#resolutionSlider[data-active-zone]::-webkit-slider-thumb,
+#resolutionSlider[data-active-zone]::-moz-range-thumb {
+  transform: scale(1.06);
+}
+
+#resLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+#resNum {
+  display: inline-block;
+  width: 2ch;
+  text-align: right;
+}
+
+.color-control {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+#colorPanelToggle {
+  padding: 6px 10px;
+}
+
+.color-swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--active-color, #000000);
+}
+
+#colorPanelToggle .color-toggle-chevron {
+  font-size: 10px;
+  transition: transform 0.2s;
+}
+
+#colorPanelToggle.open .color-toggle-chevron {
+  transform: rotate(180deg);
+}
+
+#colorPanel {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 238px;
+  max-width: min(300px, 80vw);
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.16);
+  display: none;
+  z-index: 180;
+}
+
+#colorPanel.open {
+  display: block;
+}
+
+.color-row {
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.color-row label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+#hexInput,
+.rgb-inputs input {
+  width: 100%;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-alt);
+  color: var(--text);
+  padding: 4px 6px;
+  font-size: 12px;
+  min-height: 26px;
+}
+
+#hexInput {
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.rgb-inputs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.rgb-inputs input {
+  text-align: center;
+}
+
+.rgb-inputs input[type="number"] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.rgb-inputs input[type="number"]::-webkit-outer-spin-button,
+.rgb-inputs input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.color-picker-area {
+  margin: 2px 0 6px;
+}
+
+.color-tools {
+  margin: 0 0 6px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+#eyedropperBtn {
+  padding: 4px 8px;
+  font-size: 11px;
+  gap: 5px;
+}
+
+#eyedropperBtn i {
+  font-size: 11px;
+}
+
+#svPanel {
+  position: relative;
+  width: 100%;
+  height: 106px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: crosshair;
+  background:
+    linear-gradient(to top, #000 0%, rgba(0, 0, 0, 0) 100%),
+    linear-gradient(to right, #fff 0%, hsl(0, 100%, 50%) 100%);
+}
+
+#svCursor {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.3);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.hue-row {
+  margin-top: 6px;
+  display: grid;
+  grid-template-columns: 32px 1fr;
+  align-items: center;
+  gap: 6px;
+}
+
+.hue-row span {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+#huePanel {
+  position: relative;
+  height: 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  cursor: ew-resize;
+  background: var(--bg-alt);
+  background-image: linear-gradient(
+    to right,
+    #ff0000 0%,
+    #ffff00 16.7%,
+    #00ff00 33.4%,
+    #00ffff 50%,
+    #0000ff 66.7%,
+    #ff00ff 83.4%,
+    #ff0000 100%
+  );
+}
+
+#hueCursor {
+  position: absolute;
+  top: -3px;
+  width: 4px;
+  height: 16px;
+  border-radius: 2px;
+  background: #ffffff;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.recent-colors-wrap {
+  margin-top: 2px;
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  align-items: start;
+  gap: 8px;
+}
+
+.recent-colors-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  padding-top: 2px;
+}
+
+#recentColorsBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.recent-color-btn {
+  width: 16px;
+  height: 16px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  transition: transform 0.12s, border-color 0.2s;
+}
+
+.recent-color-btn:hover {
+  transform: translateY(-1px);
+  border-color: var(--text-muted);
+}
+
+.button-group {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tool-btn,
+.panel-toggle,
+.small-btn {
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-muted);
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: color 0.2s, border-color 0.2s, background 0.25s;
+}
+
+.panel-toggle {
+  width: 68px;
+  padding: 6px 8px 6px 10px;
+  justify-content: flex-start;
+  gap: 0;
+}
+
+.panel-toggle .toggle-label {
+  display: inline-block;
+  min-width: 4ch;
+  text-align: left;
+}
+
+.panel-toggle i {
+  width: 12px;
+  text-align: center;
+  flex: 0 0 12px;
+  margin-left: auto;
+}
+
+.tool-btn:hover,
+.panel-toggle:hover,
+.small-btn:hover {
+  color: var(--text);
+  border-color: var(--text-muted);
+}
+
+.tool-btn {
+  background: var(--btn-bg);
+  color: var(--btn-text);
+  border-color: var(--btn-bg);
+}
+
+.tool-btn:hover {
+  background: var(--btn-hover);
+  border-color: var(--btn-hover);
+  color: var(--btn-text);
+}
+
+#macroPanel {
+  position: relative;
+}
+
+#macroHeader,
+#historyHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+#macroHeader h3,
+#historyHeader h3 {
+  font-size: 16px;
+  letter-spacing: -0.01em;
+}
+
+#macroHeader h3 i,
+#historyHeader h3 i {
+  color: var(--heading-accent);
+  margin-right: 6px;
+}
+
+#macroTabs {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+#macroTabs button {
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-muted);
+  padding: 5px 9px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+
+#macroTabs button:hover {
+  color: var(--text);
+  border-color: var(--text-muted);
+}
+
+#macroTabs button.active {
+  background: var(--btn-bg);
+  color: var(--btn-text);
+  border-color: var(--btn-bg);
+}
+
+#macroContent {
+  margin-top: 12px;
+  display: none;
+}
+
+.macro-group {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  background: var(--bg);
+  padding: 7px;
+}
+
+.macro-group + .macro-group {
+  margin-top: 7px;
+}
+
+.macro-group-head {
+  margin: 0 0 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.macro-group-title {
+  margin: 0;
+  display: block;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.macro-viewer-head {
+  margin: 0 0 6px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 6px;
+}
+
+.macro-viewer-nav {
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  background: var(--bg-alt);
+  color: var(--text-muted);
+  min-width: 26px;
+  height: 24px;
+  padding: 0 7px;
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s, border-color 0.2s, opacity 0.2s;
+}
+
+.macro-viewer-nav:hover:not(:disabled) {
+  color: var(--text);
+  border-color: var(--text-muted);
+}
+
+.macro-viewer-nav:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.macro-viewer-center {
+  min-width: 0;
+  display: grid;
+  justify-items: center;
+  align-items: center;
+  gap: 3px;
+}
+
+.macro-viewer-current {
+  max-width: 100%;
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+}
+
+.macro-viewer-count {
+  flex: 0 0 auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--bg-alt);
+  color: var(--text-muted);
+  font-size: 10px;
+  line-height: 1.2;
+  font-weight: 600;
+  padding: 2px 6px;
+}
+
+.macro-viewer-strip {
+  margin: 0 0 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.macro-viewer-chip {
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  background: var(--bg-alt);
+  color: var(--text-muted);
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.25;
+  max-width: 110px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+
+.macro-viewer-chip:hover {
+  color: var(--text);
+  border-color: var(--text-muted);
+}
+
+.macro-viewer-chip.active {
+  background: var(--btn-bg);
+  color: var(--btn-text);
+  border-color: var(--btn-bg);
+}
+
+.macro-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  overflow: visible;
+}
+
+.macro-btn {
+  position: relative;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-alt);
+  color: var(--text);
+  width: var(--macro-btn-width);
+  max-width: var(--macro-btn-width);
+  min-width: var(--macro-btn-width);
+  height: var(--macro-btn-height);
+  max-height: var(--macro-btn-height);
+  min-height: var(--macro-btn-height);
+  padding: 4px 6px;
+  cursor: pointer;
+  display: inline-flex;
+  flex: 0 0 var(--macro-btn-width);
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  box-sizing: border-box;
+  transition: background 0.2s, border-color 0.2s, transform 0.12s;
+  overflow: visible;
+}
+
+.macro-btn.macro-matrix {
+  width: calc(var(--macro-btn-width) * var(--macro-btn-scale-matrix));
+  max-width: calc(var(--macro-btn-width) * var(--macro-btn-scale-matrix));
+  min-width: calc(var(--macro-btn-width) * var(--macro-btn-scale-matrix));
+  height: calc(var(--macro-btn-height) * var(--macro-btn-scale-matrix));
+  max-height: calc(var(--macro-btn-height) * var(--macro-btn-scale-matrix));
+  min-height: calc(var(--macro-btn-height) * var(--macro-btn-scale-matrix));
+  flex-basis: calc(var(--macro-btn-width) * var(--macro-btn-scale-matrix));
+}
+
+.macro-btn.macro-display-op {
+  width: calc(var(--macro-btn-width) * var(--macro-btn-scale-display-op));
+  max-width: calc(var(--macro-btn-width) * var(--macro-btn-scale-display-op));
+  min-width: calc(var(--macro-btn-width) * var(--macro-btn-scale-display-op));
+  height: calc(var(--macro-btn-height) * var(--macro-btn-scale-display-op));
+  max-height: calc(var(--macro-btn-height) * var(--macro-btn-scale-display-op));
+  min-height: calc(var(--macro-btn-height) * var(--macro-btn-scale-display-op));
+  flex-basis: calc(var(--macro-btn-width) * var(--macro-btn-scale-display-op));
+}
+
+.macro-btn.macro-compact {
+  width: 32px;
+  max-width: 32px;
+  min-width: 32px;
+  height: 32px;
+  max-height: 32px;
+  min-height: 32px;
+  flex-basis: 32px;
+  padding: 3px;
+  gap: 0;
+}
+
+.macro-btn:hover {
+  background: var(--btn-hover-bg);
+  border-color: var(--heading-accent);
+  transform: translateY(-1px);
+}
+
+.macro-math {
+  width: 100%;
+  min-height: var(--macro-icon-max-height);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  overflow: visible;
+}
+
+.macro-math svg {
+  width: auto;
+  height: auto;
+  max-width: none;
+  max-height: none;
+  display: block;
+}
+
+.macro-label {
+  font-size: 8px;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.macro-label.preserve-case {
+  text-transform: none;
+  letter-spacing: 0.01em;
+}
+
+.macro-btn.size-l0 { border-color: #95a0b3; }
+.macro-btn.size-auto { border-color: #66a1dc; }
+.macro-btn.size-l1 { border-color: #53af98; }
+.macro-btn.size-l2 { border-color: #7db04f; }
+.macro-btn.size-l3 { border-color: #cb9b53; }
+.macro-btn.size-l4 { border-color: #bf7c63; }
+
+.macro-btn.space-neg { border-color: #8f90a9; }
+.macro-btn.space-thin { border-color: #4e90d7; }
+.macro-btn.space-med { border-color: #4fa88f; }
+.macro-btn.space-thick { border-color: #7fa44f; }
+.macro-btn.space-quad { border-color: #be9f49; }
+.macro-btn.space-double { border-color: #b97f69; }
+
+.macro-btn::after {
+  content: attr(data-latex);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 9px);
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: 260px;
+  background: var(--grey-0);
+  color: #ffffff;
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 11px;
+  line-height: 1.35;
+  letter-spacing: 0;
+  white-space: pre-wrap;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 24;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+.macro-btn::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 3px);
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid var(--grey-0);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 24;
+}
+
+.macro-btn:hover::after,
+.macro-btn:hover::before,
+.macro-btn:focus-visible::after,
+.macro-btn:focus-visible::before {
+  opacity: 1;
+}
+
+#previewPanel {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  min-height: var(--preview-min-height);
+  height: auto;
+  overflow-x: auto;
+  overflow-y: visible;
+  white-space: normal;
+  padding: calc(var(--panel-inner-pad) + 4px) var(--panel-inner-pad);
+}
+
+#previewContainer {
+  display: block;
+  max-width: 100%;
+}
+
+#previewContainer svg {
+  display: block;
+  max-width: none;
+  height: auto;
+}
+
+#previewContainer.preview-error {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 13px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  color: var(--error-text);
+}
+
+#historySection {
+  padding: 8px;
+}
+
+.history-actions {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+}
+
+#historyScrollBar {
+  margin-top: 6px;
+  height: 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  display: none;
+}
+
+#historyScrollInner {
+  height: 1px;
+}
+
+#historyViewport {
+  margin-top: 6px;
+  max-height: 260px;
+  overflow-y: auto;
+  overflow-x: scroll;
+  display: none;
+}
+
+#historyViewport::-webkit-scrollbar:horizontal {
+  height: 0;
+}
+
+#historyContent {
+  display: block;
+  width: max-content;
+  min-width: 100%;
+}
+
+.history-item {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  padding: var(--panel-inner-pad);
+  margin-bottom: 6px;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.history-item:hover {
+  background: var(--btn-hover-bg);
+  border-color: var(--heading-accent);
+}
+
+.history-preview {
+  display: block;
+  white-space: normal;
+  overflow: visible;
+}
+
+.history-preview svg {
+  display: block;
+  max-width: none;
+  height: auto;
+}
+
+.page-footer {
+  margin: 28px 0 2px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.page-footer .footer-link-btn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  line-height: inherit;
+  color: var(--heading-accent);
+  text-decoration: none;
+  font-weight: 400;
+  cursor: pointer;
+  transition: color 0.2s, text-shadow 0.2s;
+}
+
+.page-footer .footer-link-btn:hover,
+.page-footer .footer-link-btn:focus-visible {
+  color: var(--footer-link-hover);
+  text-decoration: none;
+  text-shadow: 0 0 9px rgba(255, 166, 46, 0.38);
+}
+
+.page-footer .footer-link-btn:focus-visible {
+  outline: 1px solid var(--footer-link-hover);
+  outline-offset: 2px;
+}
+
+#toast {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  border-radius: var(--radius-sm);
+  background: rgba(0, 0, 0, 0.88);
+  color: #fff;
+  padding: 8px 14px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s;
+  font-size: 13px;
+  z-index: 200;
+}
+
+@media (max-width: 760px) {
+  :root {
+    --panel-inner-pad: 9px;
+    --preview-min-height: 46px;
+    --macro-icon-max-height: 20px;
+    --macro-btn-height: 42px;
+  }
+
+  body {
+    margin-top: 14px;
+    padding: 0 12px;
+    font-size: 14px;
+  }
+
+  .page-header h1 {
+    font-size: clamp(26px, 9vw, 36px);
+  }
+
+  #macroTabs {
+    gap: 6px;
+  }
+
+  #macroTabs button {
+    font-size: 11px;
+    padding: 5px 8px;
+  }
+
+  .macro-viewer-current {
+    font-size: 11px;
+  }
+
+  .macro-viewer-nav {
+    min-width: 24px;
+    height: 22px;
+    padding: 0 6px;
+  }
+
+  .macro-viewer-chip {
+    max-width: 88px;
+  }
+
+  #colorPanel {
+    min-width: 220px;
+  }
+
+  .macro-btn {
+    width: var(--macro-btn-width);
+    max-width: var(--macro-btn-width);
+    min-width: var(--macro-btn-width);
+    height: var(--macro-btn-height);
+    max-height: var(--macro-btn-height);
+    min-height: var(--macro-btn-height);
+    flex-basis: var(--macro-btn-width);
+    padding: 5px 6px;
+  }
+
+  .macro-btn.macro-compact {
+    width: 34px;
+    max-width: 34px;
+    min-width: 34px;
+    height: 34px;
+    max-height: 34px;
+    min-height: 34px;
+    padding: 3px;
+  }
+
+  .macro-btn.macro-matrix {
+    width: calc(var(--macro-btn-width) * var(--macro-btn-scale-matrix));
+    max-width: calc(var(--macro-btn-width) * var(--macro-btn-scale-matrix));
+    min-width: calc(var(--macro-btn-width) * var(--macro-btn-scale-matrix));
+    height: calc(var(--macro-btn-height) * var(--macro-btn-scale-matrix));
+    max-height: calc(var(--macro-btn-height) * var(--macro-btn-scale-matrix));
+    min-height: calc(var(--macro-btn-height) * var(--macro-btn-scale-matrix));
+    flex-basis: calc(var(--macro-btn-width) * var(--macro-btn-scale-matrix));
+  }
+
+  .macro-btn.macro-display-op {
+    width: calc(var(--macro-btn-width) * var(--macro-btn-scale-display-op));
+    max-width: calc(var(--macro-btn-width) * var(--macro-btn-scale-display-op));
+    min-width: calc(var(--macro-btn-width) * var(--macro-btn-scale-display-op));
+    height: calc(var(--macro-btn-height) * var(--macro-btn-scale-display-op));
+    max-height: calc(var(--macro-btn-height) * var(--macro-btn-scale-display-op));
+    min-height: calc(var(--macro-btn-height) * var(--macro-btn-scale-display-op));
+    flex-basis: calc(var(--macro-btn-width) * var(--macro-btn-scale-display-op));
+  }
+
+  #previewPanel {
+    min-height: var(--preview-min-height);
+  }
+}
+</style>
+</head>
+<body>
+<button id="themeToggle" aria-label="Toggle dark mode">
+  <i class="fa-solid fa-moon"></i>
+</button>
+
+<header class="page-header">
+  <h1>LaTeX to Image</h1>
+  <p>Render equations, then copy or download as PNG.</p>
+</header>
+
+<section class="tool-card">
+  <div class="input-header-row">
+    <label class="field-label" for="latex-input"><i class="fa-solid fa-square-root-variable"></i>Equation Input</label>
+    <div class="input-help">
+      <button id="helpToggleBtn" type="button" class="small-btn" aria-expanded="false" aria-controls="helpPanel">
+        <i class="fa-solid fa-circle-info" aria-hidden="true"></i><span>Info</span>
+      </button>
+      <div id="helpPanel" role="dialog" aria-label="Equation help guide" aria-modal="false">
+        <h4>Quick Guide</h4>
+        <ul>
+          <li><code>Shift + Enter</code> inserts <code>\\</code> for a line break.</li>
+          <li>If part of the equation is selected, color applies only to that region.</li>
+          <li>If nothing is selected, color applies to the whole expression.</li>
+          <li><code>Ctrl + Z</code> undoes and <code>Ctrl + Shift + Z</code> redoes edits.</li>
+          <li>Delimiter macros wrap selected text; with no selection, they insert an empty pair.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <textarea id="latex-input">E = mc^2</textarea>
+
+  <div class="controls">
+    <label class="control-item">
+      Resolution:
+      <input id="resolutionSlider" type="range" min="1" max="10" step="1" value="5">
+      <span id="resLabel"><span id="resNum">5</span><span>x</span></span>
+    </label>
+    <div class="color-control">
+      <button id="colorPanelToggle" type="button" class="small-btn" aria-expanded="false" aria-controls="colorPanel">
+        <span id="colorSwatch" class="color-swatch" aria-hidden="true"></span>
+        <span>Text color</span>
+        <i class="fa-solid fa-chevron-down color-toggle-chevron" aria-hidden="true"></i>
+      </button>
+      <div id="colorPanel" role="group" aria-label="Text color editor">
+        <div class="color-row">
+          <label for="hexInput">HEX</label>
+          <input id="hexInput" type="text" maxlength="7" value="#000000" spellcheck="false" autocomplete="off">
+        </div>
+        <div class="color-row">
+          <label for="rgbR">RGB</label>
+          <div class="rgb-inputs">
+            <input id="rgbR" type="number" min="0" max="255" value="0" inputmode="numeric">
+            <input id="rgbG" type="number" min="0" max="255" value="0" inputmode="numeric">
+            <input id="rgbB" type="number" min="0" max="255" value="0" inputmode="numeric">
+          </div>
+        </div>
+        <div class="color-picker-area" aria-label="Continuous color picker">
+          <div id="svPanel" role="application" aria-label="Saturation and value panel">
+            <span id="svCursor" aria-hidden="true"></span>
+          </div>
+          <label class="hue-row">
+            <span>Hue</span>
+            <div id="huePanel" role="application" aria-label="Hue panel">
+              <span id="hueCursor" aria-hidden="true"></span>
+            </div>
+          </label>
+        </div>
+        <div class="color-tools">
+          <button id="eyedropperBtn" type="button" class="small-btn">
+            <i class="fa-solid fa-eye-dropper"></i><span>Eyedropper</span>
+          </button>
+        </div>
+        <div class="recent-colors-wrap">
+          <span class="recent-colors-label">Recent</span>
+          <div id="recentColorsBar" aria-label="Recent colors"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="button-group">
+    <button id="copyBtn" class="tool-btn"><i class="fa-regular fa-copy"></i><span>Copy PNG</span></button>
+    <button id="downloadBtn" class="tool-btn"><i class="fa-solid fa-download"></i><span>Download PNG</span></button>
+  </div>
+</section>
+
+<section id="macroPanel" class="tool-card">
+  <div id="macroHeader">
+    <h3><i class="fa-solid fa-toolbox"></i>Macro Panel</h3>
+    <button id="toggleMacroBtn" class="panel-toggle"><span class="toggle-label">Show</span><i class="fa-solid fa-chevron-down"></i></button>
+  </div>
+
+  <div id="macroTabs">
+    <button type="button" data-tab="greek" class="active"><span>Greek</span></button>
+    <button type="button" data-tab="fonts"><span>Fonts</span></button>
+    <button type="button" data-tab="operators"><span>Operators</span></button>
+    <button type="button" data-tab="delimiters"><span>Delimiters</span></button>
+    <button type="button" data-tab="matrices"><span>Matrix</span></button>
+    <button type="button" data-tab="relation"><span>Relation</span></button>
+    <button type="button" data-tab="accents"><span>Accents</span></button>
+    <button type="button" data-tab="arrows"><span>Arrows</span></button>
+    <button type="button" data-tab="dots"><span>Dots/Space</span></button>
+    <button type="button" data-tab="geometry"><span>Geometry</span></button>
+  </div>
+
+  <div id="macroContent"></div>
+</section>
+
+<section class="preview-section">
+  <div class="section-heading"><i class="fa-solid fa-eye"></i><h3>Preview</h3></div>
+  <div id="previewPanel"><div id="previewContainer"></div></div>
+</section>
+
+<section id="historySection" class="tool-card">
+  <div id="historyHeader">
+    <h3><i class="fa-solid fa-clock-rotate-left"></i>History</h3>
+    <div class="history-actions">
+      <button id="clearHistoryBtn" class="small-btn" type="button"><i class="fa-regular fa-trash-can"></i><span>Clear</span></button>
+      <button id="toggleHistoryBtn" class="panel-toggle" type="button"><span class="toggle-label">Show</span><i class="fa-solid fa-chevron-down"></i></button>
+    </div>
+  </div>
+  <div id="historyScrollBar"><div id="historyScrollInner"></div></div>
+  <div id="historyViewport"><div id="historyContent"></div></div>
+</section>
+
+<footer class="page-footer">Made by <button id="footerLinkBtn" type="button" class="footer-link-btn" aria-label="Visit Yongseok Kwon website">Yongseok Kwon</button></footer>
+
+<div id="toast">Copied!</div>
+
+<script>
+const latexInput = document.getElementById("latex-input");
+const resSlider = document.getElementById("resolutionSlider");
+const resNum = document.getElementById("resNum");
+const previewContainer = document.getElementById("previewContainer");
+const copyBtn = document.getElementById("copyBtn");
+const downloadBtn = document.getElementById("downloadBtn");
+const toast = document.getElementById("toast");
+const themeToggle = document.getElementById("themeToggle");
+const colorPanelToggle = document.getElementById("colorPanelToggle");
+const colorPanel = document.getElementById("colorPanel");
+const colorSwatch = document.getElementById("colorSwatch");
+const hexInput = document.getElementById("hexInput");
+const rgbR = document.getElementById("rgbR");
+const rgbG = document.getElementById("rgbG");
+const rgbB = document.getElementById("rgbB");
+const svPanel = document.getElementById("svPanel");
+const svCursor = document.getElementById("svCursor");
+const huePanel = document.getElementById("huePanel");
+const hueCursor = document.getElementById("hueCursor");
+const eyedropperBtn = document.getElementById("eyedropperBtn");
+const recentColorsBar = document.getElementById("recentColorsBar");
+const helpToggleBtn = document.getElementById("helpToggleBtn");
+const helpPanel = document.getElementById("helpPanel");
+const footerLinkBtn = document.getElementById("footerLinkBtn");
+
+const historyContent = document.getElementById("historyContent");
+const historyViewport = document.getElementById("historyViewport");
+const historyScrollBar = document.getElementById("historyScrollBar");
+const historyScrollInner = document.getElementById("historyScrollInner");
+const toggleHistoryBtn = document.getElementById("toggleHistoryBtn");
+const clearHistoryBtn = document.getElementById("clearHistoryBtn");
+
+const macroContent = document.getElementById("macroContent");
+const toggleMacroBtn = document.getElementById("toggleMacroBtn");
+const macroTabs = document.getElementById("macroTabs");
+
+let historyList = JSON.parse(localStorage.getItem("latexHistory") || "[]");
+let currentTab = "greek";
+let macroRenderId = 0;
+let currentColorHex = "#000000";
+let selectionSnapshot = { start: 0, end: 0 };
+let recentColors = JSON.parse(localStorage.getItem("recentColors") || "[]");
+let pickerState = { h: 0, s: 0, v: 0 };
+let subsectionIndexState = JSON.parse(localStorage.getItem("macroSubsectionIndexState") || "{}");
+let editorHistory = [];
+let editorHistoryIndex = -1;
+let isRestoringEditorState = false;
+let pendingRecentColor = null;
+let macroBaselineMetricsPromise = null;
+let macroMeasureHost = null;
+
+const RECENT_COLOR_LIMIT = 18;
+const LATEX_HISTORY_LIMIT = 50;
+const EXPORT_SCALE_MULTIPLIER = 2;
+const EDITOR_HISTORY_LIMIT = 320;
+
+const lowerGreek = [
+  "alpha", "beta", "gamma", "delta", "epsilon", "varepsilon", "zeta", "eta", "theta", "vartheta", "iota", "kappa",
+  "lambda", "mu", "nu", "xi", "pi", "varpi", "rho", "varrho", "sigma", "varsigma", "tau", "upsilon", "phi", "varphi", "chi", "psi", "omega"
+].map((name) => ({ insert: `\\${name} `, preview: `\\${name}`, className: "macro-compact" }));
+
+const upperGreek = ["Gamma", "Delta", "Theta", "Lambda", "Xi", "Pi", "Sigma", "Upsilon", "Phi", "Psi", "Omega"]
+  .map((name) => ({ insert: `\\${name} `, preview: `\\${name}`, className: "macro-compact" }));
+
+const mathcalSet = Array.from("ABCDEFGHIJKLMNOPQRSTUVWXYZ").map((letter) => ({
+  insert: `\\mathcal{${letter}}`,
+  preview: `\\mathcal{${letter}}`,
+  className: "macro-compact"
+}));
+
+const mathbbSet = Array.from("ABCDEFGHIJKLMNOPQRSTUVWXYZ").map((letter) => ({
+  insert: `\\mathbb{${letter}}`,
+  preview: `\\mathbb{${letter}}`,
+  className: "macro-compact"
+}));
+
+const macroCatalog = {
+  greek: [
+    { key: "greek-lower", title: "Lowercase Greek", icon: "fa-solid fa-language", items: lowerGreek },
+    { key: "greek-upper", title: "Uppercase Greek", icon: "fa-solid fa-language", items: upperGreek }
+  ],
+  fonts: [
+    { key: "fonts-cal", title: "\\mathcal", icon: "fa-solid fa-font", items: mathcalSet },
+    { key: "fonts-bb", title: "\\mathbb", icon: "fa-solid fa-bold", items: mathbbSet }
+  ],
+  operators: [
+    {
+      key: "ops-major-inline",
+      title: "Inline Operators",
+      icon: "fa-solid fa-calculator",
+      items: [
+        { insert: "\\sum_{}^{} ", preview: "\\sum_{i=1}^{n}", label: "sum" },
+        { insert: "\\prod_{}^{} ", preview: "\\prod_{k=1}^{n}", label: "prod" },
+        { insert: "\\int_{}^{} ", preview: "\\int_{a}^{b}", label: "int" },
+        { insert: "\\iint_{}^{} ", preview: "\\iint_{D}^{}", label: "iint" },
+        { insert: "\\iiint_{}^{} ", preview: "\\iiint_{V}^{}", label: "iiint" },
+        { insert: "\\oint_{}^{} ", preview: "\\oint_{C}^{}", label: "oint" },
+        { insert: "\\bigcup_{}^{} ", preview: "\\bigcup_{i=1}^{n}", label: "bigcup" },
+        { insert: "\\bigcap_{}^{} ", preview: "\\bigcap_{i=1}^{n}", label: "bigcap" },
+        { insert: "\\coprod_{}^{} ", preview: "\\coprod_{i=1}^{n}", label: "coprod" },
+        { insert: "\\bigoplus_{}^{} ", preview: "\\bigoplus_{i=1}^{n}", label: "bigoplus" },
+        { insert: "\\bigotimes_{}^{} ", preview: "\\bigotimes_{i=1}^{n}", label: "bigotimes" },
+        { insert: "\\lim_{} ", preview: "\\lim_{n\\to\\infty}", label: "lim" },
+        { insert: "\\min_{} ", preview: "\\min_{x\\in A}", label: "min" },
+        { insert: "\\max_{} ", preview: "\\max_{x\\in A}", label: "max" },
+        { insert: "\\sup_{} ", preview: "\\sup_{x\\in A}", label: "sup" },
+        { insert: "\\inf_{} ", preview: "\\inf_{x\\in A}", label: "inf" },
+        { insert: "\\frac{}{}", preview: "\\frac{a}{b}", label: "frac" }
+      ]
+    },
+    {
+      key: "ops-major-display",
+      title: "Display Operators",
+      icon: "fa-solid fa-calculator",
+      itemClassName: "macro-display-op",
+      items: [
+        { insert: "\\displaystyle \\sum_{}^{} ", preview: "\\displaystyle \\sum_{i=1}^{n}", label: "sum" },
+        { insert: "\\displaystyle \\prod_{}^{} ", preview: "\\displaystyle \\prod_{k=1}^{n}", label: "prod" },
+        { insert: "\\displaystyle \\int_{}^{} ", preview: "\\displaystyle \\int_{a}^{b}", label: "int" },
+        { insert: "\\displaystyle \\iint_{}^{} ", preview: "\\displaystyle \\iint_{D}^{}", label: "iint" },
+        { insert: "\\displaystyle \\iiint_{}^{} ", preview: "\\displaystyle \\iiint_{V}^{}", label: "iiint" },
+        { insert: "\\displaystyle \\oint_{}^{} ", preview: "\\displaystyle \\oint_{C}^{}", label: "oint" },
+        { insert: "\\displaystyle \\bigcup_{}^{} ", preview: "\\displaystyle \\bigcup_{i=1}^{n}", label: "bigcup" },
+        { insert: "\\displaystyle \\bigcap_{}^{} ", preview: "\\displaystyle \\bigcap_{i=1}^{n}", label: "bigcap" },
+        { insert: "\\displaystyle \\coprod_{}^{} ", preview: "\\displaystyle \\coprod_{i=1}^{n}", label: "coprod" },
+        { insert: "\\displaystyle \\bigoplus_{}^{} ", preview: "\\displaystyle \\bigoplus_{i=1}^{n}", label: "bigoplus" },
+        { insert: "\\displaystyle \\bigotimes_{}^{} ", preview: "\\displaystyle \\bigotimes_{i=1}^{n}", label: "bigotimes" },
+        { insert: "\\displaystyle \\lim_{} ", preview: "\\displaystyle \\lim_{n\\to\\infty}", label: "lim" },
+        { insert: "\\displaystyle \\min_{} ", preview: "\\displaystyle \\min_{x\\in A}", label: "min" },
+        { insert: "\\displaystyle \\max_{} ", preview: "\\displaystyle \\max_{x\\in A}", label: "max" },
+        { insert: "\\displaystyle \\sup_{} ", preview: "\\displaystyle \\sup_{x\\in A}", label: "sup" },
+        { insert: "\\displaystyle \\inf_{} ", preview: "\\displaystyle \\inf_{x\\in A}", label: "inf" },
+        { insert: "\\displaystyle \\frac{}{}", preview: "\\displaystyle \\frac{a}{b}", label: "frac" }
+      ]
+    },
+    {
+      key: "ops-more",
+      title: "Additional Operators",
+      icon: "fa-solid fa-square-root-variable",
+      items: [
+        { insert: "\\log ", preview: "\\log", label: "log" },
+        { insert: "\\ln ", preview: "\\ln", label: "ln" },
+        { insert: "\\exp ", preview: "\\exp", label: "exp" },
+        { insert: "\\sin ", preview: "\\sin", label: "sin" },
+        { insert: "\\cos ", preview: "\\cos", label: "cos" },
+        { insert: "\\tan ", preview: "\\tan", label: "tan" },
+        { insert: "\\nabla ", preview: "\\nabla", label: "nabla" },
+        { insert: "\\partial ", preview: "\\partial", label: "partial" },
+        { insert: "\\infty ", preview: "\\infty", label: "infty" },
+        { insert: "\\forall ", preview: "\\forall", label: "forall" },
+        { insert: "\\exists ", preview: "\\exists", label: "exists" },
+        { insert: "\\therefore ", preview: "\\therefore", label: "therefore" }
+      ]
+    }
+  ],
+  delimiters: [
+    {
+      key: "delim-base",
+      title: "Base",
+      icon: "fa-solid fa-code",
+      items: [
+        { wrap: { left: "(", right: ")" }, source: "( ... )", preview: "(x)", label: "()", className: "size-l0" },
+        { wrap: { left: "[", right: "]" }, source: "[ ... ]", preview: "[x]", label: "[]", className: "size-l0" },
+        { wrap: { left: "\\{", right: "\\}" }, source: "\\{ ... \\}", preview: "\\{x\\}", label: "{}", className: "size-l0" },
+        { wrap: { left: "\\langle ", right: " \\rangle" }, source: "\\langle ... \\rangle", preview: "\\langle x \\rangle", label: "<>", className: "size-l0" },
+        { wrap: { left: "|", right: "|" }, source: "| ... |", preview: "|x|", label: "|", className: "size-l0" },
+        { wrap: { left: "\\lVert ", right: " \\rVert" }, source: "\\lVert ... \\rVert", preview: "\\lVert x \\rVert", label: "norm", className: "size-l0" },
+        { wrap: { left: "\\lceil ", right: " \\rceil" }, source: "\\lceil ... \\rceil", preview: "\\lceil x \\rceil", label: "ceil", className: "size-l0" },
+        { wrap: { left: "\\lfloor ", right: " \\rfloor" }, source: "\\lfloor ... \\rfloor", preview: "\\lfloor x \\rfloor", label: "floor", className: "size-l0" },
+        { insert: " \\vert ", preview: "a\\vert b", source: "\\vert", label: "vert", className: "size-l0" },
+        { insert: " \\mid ", preview: "a\\mid b", source: "\\mid", label: "mid", className: "size-l0" }
+      ]
+    },
+    {
+      key: "delim-auto",
+      title: "Auto",
+      icon: "fa-solid fa-code",
+      items: [
+        { wrap: { left: "\\left(", right: "\\right)" }, source: "\\left( ... \\right)", preview: "\\left(x\\right)", label: "()", className: "size-auto" },
+        { wrap: { left: "\\left[", right: "\\right]" }, source: "\\left[ ... \\right]", preview: "\\left[x\\right]", label: "[]", className: "size-auto" },
+        { wrap: { left: "\\left\\{", right: "\\right\\}" }, source: "\\left\\{ ... \\right\\}", preview: "\\left\\{x\\right\\}", label: "{}", className: "size-auto" },
+        { wrap: { left: "\\left\\langle ", right: " \\right\\rangle" }, source: "\\left\\langle ... \\right\\rangle", preview: "\\left\\langle x \\right\\rangle", label: "<>", className: "size-auto" },
+        { wrap: { left: "\\left|", right: "\\right|" }, source: "\\left| ... \\right|", preview: "\\left|x\\right|", label: "|", className: "size-auto" },
+        { wrap: { left: "\\left\\lVert ", right: " \\right\\rVert" }, source: "\\left\\lVert ... \\right\\rVert", preview: "\\left\\lVert x \\right\\rVert", label: "norm", className: "size-auto" },
+        { wrap: { left: "\\left\\lceil ", right: " \\right\\rceil" }, source: "\\left\\lceil ... \\right\\rceil", preview: "\\left\\lceil x \\right\\rceil", label: "ceil", className: "size-auto" },
+        { wrap: { left: "\\left\\lfloor ", right: " \\right\\rfloor" }, source: "\\left\\lfloor ... \\right\\rfloor", preview: "\\left\\lfloor x \\right\\rfloor", label: "floor", className: "size-auto" },
+        { insert: " \\vert ", preview: "a\\vert b", source: "\\vert", label: "vert", className: "size-auto" }
+      ]
+    },
+    {
+      key: "delim-big",
+      title: "big",
+      icon: "fa-solid fa-code",
+      items: [
+        { wrap: { left: "\\big(", right: "\\big)" }, source: "\\big( ... \\big)", preview: "\\big(x\\big)", label: "()", className: "size-l1" },
+        { wrap: { left: "\\big[", right: "\\big]" }, source: "\\big[ ... \\big]", preview: "\\big[x\\big]", label: "[]", className: "size-l1" },
+        { wrap: { left: "\\big\\{", right: "\\big\\}" }, source: "\\big\\{ ... \\big\\}", preview: "\\big\\{x\\big\\}", label: "{}", className: "size-l1" },
+        { wrap: { left: "\\big\\langle ", right: " \\big\\rangle" }, source: "\\big\\langle ... \\big\\rangle", preview: "\\big\\langle x \\big\\rangle", label: "<>", className: "size-l1" },
+        { wrap: { left: "\\big|", right: "\\big|" }, source: "\\big| ... \\big|", preview: "\\big|x\\big|", label: "|", className: "size-l1" },
+        { wrap: { left: "\\big\\lVert ", right: " \\big\\rVert" }, source: "\\big\\lVert ... \\big\\rVert", preview: "\\big\\lVert x \\big\\rVert", label: "norm", className: "size-l1" },
+        { wrap: { left: "\\big\\lceil ", right: " \\big\\rceil" }, source: "\\big\\lceil ... \\big\\rceil", preview: "\\big\\lceil x \\big\\rceil", label: "ceil", className: "size-l1" },
+        { wrap: { left: "\\big\\lfloor ", right: " \\big\\rfloor" }, source: "\\big\\lfloor ... \\big\\rfloor", preview: "\\big\\lfloor x \\big\\rfloor", label: "floor", className: "size-l1" },
+        { insert: " \\big| ", preview: "a\\big| b", source: "\\big|", label: "vert", className: "size-l1" },
+        { insert: " \\bigm| ", preview: "a\\bigm| b", source: "\\bigm|", label: "mid", className: "size-l1" }
+      ]
+    },
+    {
+      key: "delim-Big",
+      title: "Big",
+      icon: "fa-solid fa-code",
+      items: [
+        { wrap: { left: "\\Big(", right: "\\Big)" }, source: "\\Big( ... \\Big)", preview: "\\Big(x\\Big)", label: "()", className: "size-l2" },
+        { wrap: { left: "\\Big[", right: "\\Big]" }, source: "\\Big[ ... \\Big]", preview: "\\Big[x\\Big]", label: "[]", className: "size-l2" },
+        { wrap: { left: "\\Big\\{", right: "\\Big\\}" }, source: "\\Big\\{ ... \\Big\\}", preview: "\\Big\\{x\\Big\\}", label: "{}", className: "size-l2" },
+        { wrap: { left: "\\Big\\langle ", right: " \\Big\\rangle" }, source: "\\Big\\langle ... \\Big\\rangle", preview: "\\Big\\langle x \\Big\\rangle", label: "<>", className: "size-l2" },
+        { wrap: { left: "\\Big|", right: "\\Big|" }, source: "\\Big| ... \\Big|", preview: "\\Big|x\\Big|", label: "|", className: "size-l2" },
+        { wrap: { left: "\\Big\\lVert ", right: " \\Big\\rVert" }, source: "\\Big\\lVert ... \\Big\\rVert", preview: "\\Big\\lVert x \\Big\\rVert", label: "norm", className: "size-l2" },
+        { wrap: { left: "\\Big\\lceil ", right: " \\Big\\rceil" }, source: "\\Big\\lceil ... \\Big\\rceil", preview: "\\Big\\lceil x \\Big\\rceil", label: "ceil", className: "size-l2" },
+        { wrap: { left: "\\Big\\lfloor ", right: " \\Big\\rfloor" }, source: "\\Big\\lfloor ... \\Big\\rfloor", preview: "\\Big\\lfloor x \\Big\\rfloor", label: "floor", className: "size-l2" },
+        { insert: " \\Big| ", preview: "a\\Big| b", source: "\\Big|", label: "vert", className: "size-l2" },
+        { insert: " \\Bigm| ", preview: "a\\Bigm| b", source: "\\Bigm|", label: "mid", className: "size-l2" }
+      ]
+    },
+    {
+      key: "delim-bigg",
+      title: "bigg",
+      icon: "fa-solid fa-code",
+      items: [
+        { wrap: { left: "\\bigg(", right: "\\bigg)" }, source: "\\bigg( ... \\bigg)", preview: "\\bigg(x\\bigg)", label: "()", className: "size-l3" },
+        { wrap: { left: "\\bigg[", right: "\\bigg]" }, source: "\\bigg[ ... \\bigg]", preview: "\\bigg[x\\bigg]", label: "[]", className: "size-l3" },
+        { wrap: { left: "\\bigg\\{", right: "\\bigg\\}" }, source: "\\bigg\\{ ... \\bigg\\}", preview: "\\bigg\\{x\\bigg\\}", label: "{}", className: "size-l3" },
+        { wrap: { left: "\\bigg\\langle ", right: " \\bigg\\rangle" }, source: "\\bigg\\langle ... \\bigg\\rangle", preview: "\\bigg\\langle x \\bigg\\rangle", label: "<>", className: "size-l3" },
+        { wrap: { left: "\\bigg|", right: "\\bigg|" }, source: "\\bigg| ... \\bigg|", preview: "\\bigg|x\\bigg|", label: "|", className: "size-l3" },
+        { wrap: { left: "\\bigg\\lVert ", right: " \\bigg\\rVert" }, source: "\\bigg\\lVert ... \\bigg\\rVert", preview: "\\bigg\\lVert x \\bigg\\rVert", label: "norm", className: "size-l3" },
+        { wrap: { left: "\\bigg\\lceil ", right: " \\bigg\\rceil" }, source: "\\bigg\\lceil ... \\bigg\\rceil", preview: "\\bigg\\lceil x \\bigg\\rceil", label: "ceil", className: "size-l3" },
+        { wrap: { left: "\\bigg\\lfloor ", right: " \\bigg\\rfloor" }, source: "\\bigg\\lfloor ... \\bigg\\rfloor", preview: "\\bigg\\lfloor x \\bigg\\rfloor", label: "floor", className: "size-l3" },
+        { insert: " \\bigg| ", preview: "a\\bigg| b", source: "\\bigg|", label: "vert", className: "size-l3" },
+        { insert: " \\biggm| ", preview: "a\\biggm| b", source: "\\biggm|", label: "mid", className: "size-l3" }
+      ]
+    },
+    {
+      key: "delim-Bigg",
+      title: "Bigg",
+      icon: "fa-solid fa-code",
+      items: [
+        { wrap: { left: "\\Bigg(", right: "\\Bigg)" }, source: "\\Bigg( ... \\Bigg)", preview: "\\Bigg(x\\Bigg)", label: "()", className: "size-l4" },
+        { wrap: { left: "\\Bigg[", right: "\\Bigg]" }, source: "\\Bigg[ ... \\Bigg]", preview: "\\Bigg[x\\Bigg]", label: "[]", className: "size-l4" },
+        { wrap: { left: "\\Bigg\\{", right: "\\Bigg\\}" }, source: "\\Bigg\\{ ... \\Bigg\\}", preview: "\\Bigg\\{x\\Bigg\\}", label: "{}", className: "size-l4" },
+        { wrap: { left: "\\Bigg\\langle ", right: " \\Bigg\\rangle" }, source: "\\Bigg\\langle ... \\Bigg\\rangle", preview: "\\Bigg\\langle x \\Bigg\\rangle", label: "<>", className: "size-l4" },
+        { wrap: { left: "\\Bigg|", right: "\\Bigg|" }, source: "\\Bigg| ... \\Bigg|", preview: "\\Bigg|x\\Bigg|", label: "|", className: "size-l4" },
+        { wrap: { left: "\\Bigg\\lVert ", right: " \\Bigg\\rVert" }, source: "\\Bigg\\lVert ... \\Bigg\\rVert", preview: "\\Bigg\\lVert x \\Bigg\\rVert", label: "norm", className: "size-l4" },
+        { wrap: { left: "\\Bigg\\lceil ", right: " \\Bigg\\rceil" }, source: "\\Bigg\\lceil ... \\Bigg\\rceil", preview: "\\Bigg\\lceil x \\Bigg\\rceil", label: "ceil", className: "size-l4" },
+        { wrap: { left: "\\Bigg\\lfloor ", right: " \\Bigg\\rfloor" }, source: "\\Bigg\\lfloor ... \\Bigg\\rfloor", preview: "\\Bigg\\lfloor x \\Bigg\\rfloor", label: "floor", className: "size-l4" },
+        { insert: " \\Bigg| ", preview: "a\\Bigg| b", source: "\\Bigg|", label: "vert", className: "size-l4" },
+        { insert: " \\Biggm| ", preview: "a\\Biggm| b", source: "\\Biggm|", label: "mid", className: "size-l4" }
+      ]
+    }
+  ],
+  matrices: [{
+    key: "matrix-core",
+    title: "Matrix / Array / Cases Snippets",
+    icon: "fa-solid fa-table-cells",
+    items: [
+      { insert: "\\begin{matrix}a & b \\\\ c & d\\end{matrix}", preview: "\\begin{matrix}a & b \\\\ c & d\\end{matrix}", label: "matrix", className: "macro-matrix" },
+      { insert: "\\begin{pmatrix}a & b \\\\ c & d\\end{pmatrix}", preview: "\\begin{pmatrix}a & b \\\\ c & d\\end{pmatrix}", label: "pmatrix", className: "macro-matrix" },
+      { insert: "\\begin{bmatrix}a & b \\\\ c & d\\end{bmatrix}", preview: "\\begin{bmatrix}a & b \\\\ c & d\\end{bmatrix}", label: "bmatrix", className: "macro-matrix" },
+      { insert: "\\begin{Bmatrix}a & b \\\\ c & d\\end{Bmatrix}", preview: "\\begin{Bmatrix}a & b \\\\ c & d\\end{Bmatrix}", label: "Bmatrix", className: "macro-matrix" },
+      { insert: "\\begin{vmatrix}a & b \\\\ c & d\\end{vmatrix}", preview: "\\begin{vmatrix}a & b \\\\ c & d\\end{vmatrix}", label: "vmatrix", className: "macro-matrix" },
+      { insert: "\\begin{Vmatrix}a & b \\\\ c & d\\end{Vmatrix}", preview: "\\begin{Vmatrix}a & b \\\\ c & d\\end{Vmatrix}", label: "Vmatrix", className: "macro-matrix" },
+      { insert: "\\begin{array}{cc}a & b \\\\ c & d\\end{array}", preview: "\\begin{array}{cc}a & b \\\\ c & d\\end{array}", label: "array", className: "macro-matrix" },
+      { insert: "\\begin{cases}x^2, & x \\ge 0 \\\\ -x, & x < 0\\end{cases}", preview: "\\begin{cases}x^2, & x \\ge 0 \\\\ -x, & x < 0\\end{cases}", label: "cases", className: "macro-matrix" },
+      { insert: "\\begin{aligned}a &= b + c \\\\ d &= e + f\\end{aligned}", preview: "\\begin{aligned}a &= b + c \\\\ d &= e + f\\end{aligned}", label: "aligned", className: "macro-matrix" }
+    ]
+  }],
+  relation: [{
+    key: "relation-core",
+    title: "Relational Operators",
+    icon: "fa-solid fa-equals",
+    items: [
+      { insert: " \\neq ", preview: "a\\neq b", label: "neq" },
+      { insert: " \\leq ", preview: "a\\leq b", label: "leq" },
+      { insert: " \\geq ", preview: "a\\geq b", label: "geq" },
+      { insert: " \\succ ", preview: "a\\succ b", label: "succ" },
+      { insert: " \\succeq ", preview: "a\\succeq b", label: "succeq" },
+      { insert: " \\approx ", preview: "a\\approx b", label: "approx" },
+      { insert: " \\sim ", preview: "a\\sim b", label: "sim" },
+      { insert: " \\simeq ", preview: "a\\simeq b", label: "simeq" },
+      { insert: " \\cong ", preview: "a\\cong b", label: "cong" },
+      { insert: " \\equiv ", preview: "a\\equiv b", label: "equiv" },
+      { insert: " \\propto ", preview: "a\\propto b", label: "prop" },
+      { insert: " \\in ", preview: "a\\in A", label: "in" },
+      { insert: " \\notin ", preview: "a\\notin A", label: "notin" },
+      { insert: " \\subset ", preview: "A\\subset B", label: "subset" },
+      { insert: " \\subseteq ", preview: "A\\subseteq B", label: "subseteq" },
+      { insert: " \\supset ", preview: "A\\supset B", label: "supset" },
+      { insert: " \\supseteq ", preview: "A\\supseteq B", label: "supseteq" },
+      { insert: " \\parallel ", preview: "l_1\\parallel l_2", label: "parallel" },
+      { insert: " \\perp ", preview: "l_1\\perp l_2", label: "perp" }
+    ]
+  }],
+  accents: [{
+    key: "accents-core",
+    title: "Accents",
+    icon: "fa-solid fa-highlighter",
+    items: [
+      { insert: "\\hat{x}", preview: "\\hat{x}", label: "hat" },
+      { insert: "\\widehat{AB}", preview: "\\widehat{AB}", label: "widehat" },
+      { insert: "\\bar{x}", preview: "\\bar{x}", label: "bar" },
+      { insert: "\\overline{AB}", preview: "\\overline{AB}", label: "overline" },
+      { insert: "\\tilde{x}", preview: "\\tilde{x}", label: "tilde" },
+      { insert: "\\widetilde{AB}", preview: "\\widetilde{AB}", label: "widetilde" },
+      { insert: "\\vec{v}", preview: "\\vec{v}", label: "vec" },
+      { insert: "\\dot{x}", preview: "\\dot{x}", label: "dot" },
+      { insert: "\\ddot{x}", preview: "\\ddot{x}", label: "ddot" },
+      { insert: "\\acute{x}", preview: "\\acute{x}", label: "acute" },
+      { insert: "\\grave{x}", preview: "\\grave{x}", label: "grave" },
+      { insert: "\\breve{x}", preview: "\\breve{x}", label: "breve" },
+      { insert: "\\check{x}", preview: "\\check{x}", label: "check" }
+    ]
+  }],
+  arrows: [{
+    key: "arrows-core",
+    title: "Arrows",
+    icon: "fa-solid fa-right-left",
+    items: [
+      { insert: "\\to ", preview: "\\to", label: "to" },
+      { insert: "\\leftarrow ", preview: "\\leftarrow", label: "left" },
+      { insert: "\\leftrightarrow ", preview: "\\leftrightarrow", label: "both" },
+      { insert: "\\longrightarrow ", preview: "\\longrightarrow", label: "long->" },
+      { insert: "\\longleftarrow ", preview: "\\longleftarrow", label: "long<-" },
+      { insert: "\\longleftrightarrow ", preview: "\\longleftrightarrow", label: "long<>" },
+      { insert: "\\Rightarrow ", preview: "\\Rightarrow", label: "=>" },
+      { insert: "\\Leftarrow ", preview: "\\Leftarrow", label: "<=" },
+      { insert: "\\Leftrightarrow ", preview: "\\Leftrightarrow", label: "<=>" },
+      { insert: "\\Longrightarrow ", preview: "\\Longrightarrow", label: "Long=>" },
+      { insert: "\\Longleftarrow ", preview: "\\Longleftarrow", label: "Long<=" },
+      { insert: "\\Longleftrightarrow ", preview: "\\Longleftrightarrow", label: "Long<=>" },
+      { insert: "\\mapsto ", preview: "\\mapsto", label: "map" },
+      { insert: "\\longmapsto ", preview: "\\longmapsto", label: "lmap" },
+      { insert: "\\hookrightarrow ", preview: "\\hookrightarrow", label: "hook" },
+      { insert: "\\xrightarrow{} ", preview: "\\xrightarrow[a]{b}", label: "x->" },
+      { insert: "\\xleftarrow{} ", preview: "\\xleftarrow[a]{b}", label: "x<-" },
+      { insert: "\\twoheadrightarrow ", preview: "\\twoheadrightarrow", label: "2head->" },
+      { insert: "\\twoheadleftarrow ", preview: "\\twoheadleftarrow", label: "2head<-" },
+      { insert: "\\leftrightharpoons ", preview: "\\leftrightharpoons", label: "harpoons" },
+      { insert: "\\rightleftharpoons ", preview: "\\rightleftharpoons", label: "rharpoons" },
+      { insert: "\\uparrow ", preview: "\\uparrow", label: "up" },
+      { insert: "\\downarrow ", preview: "\\downarrow", label: "down" },
+      { insert: "\\updownarrow ", preview: "\\updownarrow", label: "updown" }
+    ]
+  }],
+  dots: [
+    {
+      key: "dots-patterns",
+      title: "Dot Patterns",
+      icon: "fa-solid fa-ellipsis",
+      items: [
+        { insert: "\\ldots ", preview: "\\ldots", label: "ldots" },
+        { insert: "\\cdots ", preview: "\\cdots", label: "cdots" },
+        { insert: "\\vdots ", preview: "\\vdots", label: "vdots", iconScale: 1.33, iconMaxHeight: 22, iconMaxWidth: 46 },
+        { insert: "\\ddots ", preview: "\\ddots", label: "ddots", iconScale: 1.33, iconMaxHeight: 22, iconMaxWidth: 46 }
+      ]
+    },
+    {
+      key: "dots-spacing",
+      title: "Spacing Templates",
+      icon: "fa-solid fa-right-left",
+      items: [
+        { insert: "a\\!b", preview: "a\\!b", label: "neg", className: "space-neg" },
+        { insert: "a\\,b", preview: "a\\,b", label: "thin", className: "space-thin" },
+        { insert: "a\\:b", preview: "a\\:b", label: "med", className: "space-med" },
+        { insert: "a\\;b", preview: "a\\;b", label: "thick", className: "space-thick" },
+        { insert: "a\\quad b", preview: "a\\quad b", label: "quad", className: "space-quad" },
+        { insert: "a\\qquad b", preview: "a\\qquad b", label: "2quad", className: "space-double" }
+      ]
+    }
+  ],
+  geometry: [{
+    key: "geometry-core",
+    title: "Geometry Symbols",
+    icon: "fa-solid fa-draw-polygon",
+    items: [
+      { insert: "\\angle ", preview: "\\angle", label: "angle" },
+      { insert: "\\measuredangle ", preview: "\\measuredangle", label: "mangle" },
+      { insert: "\\triangle ", preview: "\\triangle", label: "tri" },
+      { insert: "\\square ", preview: "\\square", label: "square" },
+      { insert: "\\circ ", preview: "\\circ", label: "circ" },
+      { insert: "\\parallel ", preview: "\\parallel", label: "parallel" },
+      { insert: "\\perp ", preview: "\\perp", label: "perp" },
+      { insert: "\\cong ", preview: "\\cong", label: "cong" },
+      { insert: "\\sim ", preview: "\\sim", label: "sim" },
+      { insert: "\\propto ", preview: "\\propto", label: "prop" },
+      { insert: "\\overline{AB}", preview: "\\overline{AB}", label: "segment" },
+      { insert: "\\overrightarrow{AB}", preview: "\\overrightarrow{AB}", label: "ray" },
+      { insert: "\\widehat{ABC}", preview: "\\widehat{ABC}", label: "arc" },
+      { insert: "90^{\\circ}", preview: "90^{\\circ}", label: "degree" },
+      { insert: "\\ell ", preview: "\\ell", label: "line" }
+    ]
+  }]
+};
+
+function showToast(msg) {
+  toast.textContent = msg;
+  toast.style.opacity = 1;
+  setTimeout(() => {
+    toast.style.opacity = 0;
+  }, 1400);
+}
+
+function updateResLabel() {
+  const value = parseFloat(resSlider.value);
+  const min = parseFloat(resSlider.min);
+  const max = parseFloat(resSlider.max);
+  const safeMin = Number.isFinite(min) ? min : 0;
+  const safeMax = Number.isFinite(max) ? max : 100;
+  const safeValue = Number.isFinite(value) ? value : safeMin;
+  const ratio = safeMax === safeMin ? 0 : Math.max(0, Math.min(1, (safeValue - safeMin) / (safeMax - safeMin)));
+  const displayScale = Math.max(1, safeValue || 1);
+  resNum.textContent = String(displayScale);
+  resSlider.style.setProperty("--res-fill", `${(ratio * 100).toFixed(3)}%`);
+}
+
+resSlider.addEventListener("input", updateResLabel);
+
+function getResolutionSliderPointerZone(event) {
+  const rect = resSlider.getBoundingClientRect();
+  if (rect.width <= 0 || rect.height <= 0) {
+    return "track";
+  }
+  const min = Number.parseFloat(resSlider.min);
+  const max = Number.parseFloat(resSlider.max);
+  const value = Number.parseFloat(resSlider.value);
+  const safeMin = Number.isFinite(min) ? min : 0;
+  const safeMax = Number.isFinite(max) ? max : 100;
+  const safeValue = Number.isFinite(value) ? value : safeMin;
+  const ratio = safeMax === safeMin ? 0 : Math.max(0, Math.min(1, (safeValue - safeMin) / (safeMax - safeMin)));
+
+  const thumbSize = 16;
+  const thumbCenterX = rect.left + thumbSize / 2 + (rect.width - thumbSize) * ratio;
+  const thumbCenterY = rect.top + rect.height / 2;
+  const isThumbX = Math.abs(event.clientX - thumbCenterX) <= thumbSize * 0.68;
+  const isThumbY = Math.abs(event.clientY - thumbCenterY) <= thumbSize * 0.9;
+  return isThumbX && isThumbY ? "thumb" : "track";
+}
+
+function updateResolutionSliderHover(event) {
+  if (event.pointerType === "touch") {
+    return;
+  }
+  resSlider.dataset.hoverZone = getResolutionSliderPointerZone(event);
+}
+
+function clearResolutionSliderHover() {
+  delete resSlider.dataset.hoverZone;
+}
+
+function clearResolutionSliderActive() {
+  delete resSlider.dataset.active;
+  delete resSlider.dataset.activeZone;
+}
+
+resSlider.addEventListener("pointerenter", updateResolutionSliderHover);
+resSlider.addEventListener("pointermove", (event) => {
+  updateResolutionSliderHover(event);
+  if (resSlider.dataset.active === "true") {
+    resSlider.dataset.activeZone = getResolutionSliderPointerZone(event);
+  }
+});
+resSlider.addEventListener("pointerleave", () => {
+  if (resSlider.dataset.active !== "true") {
+    clearResolutionSliderHover();
+  }
+});
+resSlider.addEventListener("pointerdown", (event) => {
+  resSlider.dataset.active = "true";
+  resSlider.dataset.activeZone = getResolutionSliderPointerZone(event);
+  if (event.pointerType !== "touch") {
+    updateResolutionSliderHover(event);
+  }
+});
+resSlider.addEventListener("pointerup", () => {
+  clearResolutionSliderActive();
+  if (!resSlider.matches(":hover")) {
+    clearResolutionSliderHover();
+  }
+});
+resSlider.addEventListener("pointercancel", () => {
+  clearResolutionSliderActive();
+  clearResolutionSliderHover();
+});
+document.addEventListener("pointerup", () => {
+  if (resSlider.dataset.active === "true") {
+    clearResolutionSliderActive();
+    if (!resSlider.matches(":hover")) {
+      clearResolutionSliderHover();
+    }
+  }
+});
+resSlider.addEventListener("blur", () => {
+  clearResolutionSliderActive();
+  clearResolutionSliderHover();
+});
+
+function normalizeHex(raw) {
+  if (typeof raw !== "string") {
+    return null;
+  }
+  const trimmed = raw.trim();
+  if (!trimmed) {
+    return null;
+  }
+  let token = trimmed.replace(/^#/, "");
+  if (/^[0-9a-fA-F]{3}$/.test(token)) {
+    token = token.split("").map((char) => char + char).join("");
+  }
+  if (!/^[0-9a-fA-F]{6}$/.test(token)) {
+    return null;
+  }
+  return `#${token.toUpperCase()}`;
+}
+
+function clampByte(value) {
+  const num = Number.parseInt(value, 10);
+  if (Number.isNaN(num)) {
+    return null;
+  }
+  return Math.max(0, Math.min(255, num));
+}
+
+function rgbToHex(r, g, b) {
+  return `#${[r, g, b].map((part) => part.toString(16).padStart(2, "0")).join("").toUpperCase()}`;
+}
+
+function hexToRgb(hex) {
+  const normalized = normalizeHex(hex);
+  if (!normalized) {
+    return null;
+  }
+  const token = normalized.slice(1);
+  return {
+    r: Number.parseInt(token.slice(0, 2), 16),
+    g: Number.parseInt(token.slice(2, 4), 16),
+    b: Number.parseInt(token.slice(4, 6), 16)
+  };
+}
+
+function rgbToHsv(r, g, b) {
+  const rn = r / 255;
+  const gn = g / 255;
+  const bn = b / 255;
+  const max = Math.max(rn, gn, bn);
+  const min = Math.min(rn, gn, bn);
+  const delta = max - min;
+
+  let h = 0;
+  if (delta !== 0) {
+    if (max === rn) {
+      h = ((gn - bn) / delta) % 6;
+    } else if (max === gn) {
+      h = (bn - rn) / delta + 2;
+    } else {
+      h = (rn - gn) / delta + 4;
+    }
+    h *= 60;
+    if (h < 0) {
+      h += 360;
+    }
+  }
+
+  const s = max === 0 ? 0 : delta / max;
+  const v = max;
+  return { h, s, v };
+}
+
+function hsvToRgb(h, s, v) {
+  const hue = ((h % 360) + 360) % 360;
+  const sat = Math.max(0, Math.min(1, s));
+  const val = Math.max(0, Math.min(1, v));
+
+  const c = val * sat;
+  const x = c * (1 - Math.abs((hue / 60) % 2 - 1));
+  const m = val - c;
+
+  let rn = 0;
+  let gn = 0;
+  let bn = 0;
+
+  if (hue < 60) {
+    rn = c; gn = x; bn = 0;
+  } else if (hue < 120) {
+    rn = x; gn = c; bn = 0;
+  } else if (hue < 180) {
+    rn = 0; gn = c; bn = x;
+  } else if (hue < 240) {
+    rn = 0; gn = x; bn = c;
+  } else if (hue < 300) {
+    rn = x; gn = 0; bn = c;
+  } else {
+    rn = c; gn = 0; bn = x;
+  }
+
+  return {
+    r: Math.round((rn + m) * 255),
+    g: Math.round((gn + m) * 255),
+    b: Math.round((bn + m) * 255)
+  };
+}
+
+function getInlineStylePrefix(hex) {
+  const normalized = normalizeHex(hex) || "#000000";
+  return `\\style{color:${normalized}}{`;
+}
+
+function buildRenderableLatex(sourceLatex) {
+  let latex = (sourceLatex || "").trim();
+  if (!latex) {
+    return "";
+  }
+
+  latex = latex.replace(/\n\n+/g, "\\\\[1em]");
+
+  if (!/\\begin\{.*?\}/.test(latex)) {
+    latex = "\\begin{array}{l}" + latex + "\\end{array}";
+  }
+
+  return latex;
+}
+
+function applySvgBaseColor(svgEl, hexColor) {
+  const normalized = normalizeHex(hexColor) || "#000000";
+  svgEl.style.color = normalized;
+  svgEl.setAttribute("color", normalized);
+}
+
+function refreshPickerUiFromState() {
+  const hue = ((pickerState.h % 360) + 360) % 360;
+  const sat = Math.max(0, Math.min(1, pickerState.s));
+  const val = Math.max(0, Math.min(1, pickerState.v));
+  pickerState = { h: hue, s: sat, v: val };
+
+  svPanel.style.background = `linear-gradient(to top, #000 0%, rgba(0,0,0,0) 100%), linear-gradient(to right, #fff 0%, hsl(${hue.toFixed(1)}, 100%, 50%) 100%)`;
+  svCursor.style.left = `${sat * 100}%`;
+  svCursor.style.top = `${(1 - val) * 100}%`;
+  hueCursor.style.left = `${(hue / 360) * 100}%`;
+}
+
+function setColorPanelOpen(open) {
+  const wasOpen = colorPanel.classList.contains("open");
+  if (open && !wasOpen) {
+    pendingRecentColor = null;
+  }
+  if (!open && wasOpen && pendingRecentColor) {
+    rememberRecentColor(pendingRecentColor);
+    pendingRecentColor = null;
+  }
+  colorPanel.classList.toggle("open", open);
+  colorPanelToggle.classList.toggle("open", open);
+  colorPanelToggle.setAttribute("aria-expanded", open ? "true" : "false");
+}
+
+function setHelpPanelOpen(open) {
+  helpPanel.classList.toggle("open", open);
+  helpToggleBtn.setAttribute("aria-expanded", open ? "true" : "false");
+}
+
+function renderRecentColors() {
+  recentColorsBar.innerHTML = "";
+  recentColors.forEach((colorHex) => {
+    const swatch = document.createElement("button");
+    swatch.type = "button";
+    swatch.className = "recent-color-btn";
+    swatch.style.backgroundColor = colorHex;
+    swatch.title = colorHex;
+    swatch.setAttribute("aria-label", `Use ${colorHex}`);
+    swatch.addEventListener("mousedown", (event) => {
+      event.preventDefault();
+    });
+    swatch.addEventListener("click", () => {
+      applyPickedColor(colorHex, { allowSelection: true, trackRecent: false, queueRecent: true });
+    });
+    recentColorsBar.appendChild(swatch);
+  });
+}
+
+function rememberRecentColor(colorHex) {
+  const normalized = normalizeHex(colorHex);
+  if (!normalized) {
+    return;
+  }
+  recentColors = [normalized, ...recentColors.filter((entry) => entry !== normalized)]
+    .slice(0, RECENT_COLOR_LIMIT);
+  localStorage.setItem("recentColors", JSON.stringify(recentColors));
+  renderRecentColors();
+}
+
+function queueRecentColor(colorHex) {
+  const normalized = normalizeHex(colorHex);
+  if (!normalized) {
+    return;
+  }
+  pendingRecentColor = normalized;
+}
+
+function syncColorInputs(colorHex, { syncPicker = true } = {}) {
+  const normalized = normalizeHex(colorHex) || "#000000";
+  const rgb = hexToRgb(normalized) || { r: 0, g: 0, b: 0 };
+  hexInput.value = normalized;
+  rgbR.value = String(rgb.r);
+  rgbG.value = String(rgb.g);
+  rgbB.value = String(rgb.b);
+  colorSwatch.style.backgroundColor = normalized;
+  if (syncPicker) {
+    pickerState = rgbToHsv(rgb.r, rgb.g, rgb.b);
+  }
+  refreshPickerUiFromState();
+}
+
+function setCurrentColor(colorHex, { trackRecent = true, updateBase = true, syncPicker = true } = {}) {
+  const normalized = normalizeHex(colorHex);
+  if (!normalized) {
+    return null;
+  }
+  if (updateBase) {
+    currentColorHex = normalized;
+  }
+  syncColorInputs(normalized, { syncPicker });
+  if (trackRecent) {
+    rememberRecentColor(normalized);
+  }
+  return normalized;
+}
+
+function clampRangePosition(pos, limit) {
+  if (!Number.isFinite(pos)) {
+    return 0;
+  }
+  return Math.max(0, Math.min(limit, pos));
+}
+
+function getEffectiveResolutionScale() {
+  return Math.max(1, parseFloat(resSlider.value) || 1) * EXPORT_SCALE_MULTIPLIER;
+}
+
+function captureEditorState() {
+  return {
+    value: latexInput.value,
+    selectionStart: typeof latexInput.selectionStart === "number" ? latexInput.selectionStart : 0,
+    selectionEnd: typeof latexInput.selectionEnd === "number" ? latexInput.selectionEnd : 0,
+    snapshotStart: selectionSnapshot.start,
+    snapshotEnd: selectionSnapshot.end,
+    baseColor: currentColorHex
+  };
+}
+
+function isSameEditorState(a, b) {
+  return !!a && !!b
+    && a.value === b.value
+    && a.selectionStart === b.selectionStart
+    && a.selectionEnd === b.selectionEnd
+    && a.snapshotStart === b.snapshotStart
+    && a.snapshotEnd === b.snapshotEnd
+    && a.baseColor === b.baseColor;
+}
+
+function recordEditorState() {
+  if (isRestoringEditorState) {
+    return;
+  }
+  const next = captureEditorState();
+  const current = editorHistory[editorHistoryIndex];
+  if (isSameEditorState(current, next)) {
+    return;
+  }
+  if (editorHistoryIndex < editorHistory.length - 1) {
+    editorHistory = editorHistory.slice(0, editorHistoryIndex + 1);
+  }
+  editorHistory.push(next);
+  if (editorHistory.length > EDITOR_HISTORY_LIMIT) {
+    editorHistory.shift();
+  }
+  editorHistoryIndex = editorHistory.length - 1;
+}
+
+function restoreEditorState(state) {
+  if (!state) {
+    return;
+  }
+  isRestoringEditorState = true;
+  latexInput.value = state.value || "";
+
+  const normalizedBase = normalizeHex(state.baseColor || "") || "#000000";
+  currentColorHex = normalizedBase;
+  syncColorInputs(normalizedBase);
+
+  const limit = latexInput.value.length;
+  const selectionStart = clampRangePosition(state.selectionStart, limit);
+  const selectionEnd = clampRangePosition(state.selectionEnd, limit);
+  latexInput.focus();
+  latexInput.setSelectionRange(
+    Math.min(selectionStart, selectionEnd),
+    Math.max(selectionStart, selectionEnd)
+  );
+
+  const snapshotStart = clampRangePosition(state.snapshotStart, limit);
+  const snapshotEnd = clampRangePosition(state.snapshotEnd, limit);
+  selectionSnapshot = {
+    start: Math.min(snapshotStart, snapshotEnd),
+    end: Math.max(snapshotStart, snapshotEnd)
+  };
+  updateSelectionStatus();
+  isRestoringEditorState = false;
+  renderMath();
+}
+
+function undoEditorState() {
+  if (editorHistoryIndex <= 0) {
+    return;
+  }
+  editorHistoryIndex -= 1;
+  restoreEditorState(editorHistory[editorHistoryIndex]);
+}
+
+function redoEditorState() {
+  if (editorHistoryIndex >= editorHistory.length - 1) {
+    return;
+  }
+  editorHistoryIndex += 1;
+  restoreEditorState(editorHistory[editorHistoryIndex]);
+}
+
+function resetEditorHistory() {
+  editorHistory = [];
+  editorHistoryIndex = -1;
+  recordEditorState();
+}
+
+function updateSelectionSnapshot() {
+  const start = typeof latexInput.selectionStart === "number" ? latexInput.selectionStart : 0;
+  const end = typeof latexInput.selectionEnd === "number" ? latexInput.selectionEnd : start;
+  selectionSnapshot = { start, end };
+  updateSelectionStatus();
+}
+
+function getTargetSelectionRange() {
+  const isInputFocused = document.activeElement === latexInput;
+  const currentStart = typeof latexInput.selectionStart === "number" ? latexInput.selectionStart : 0;
+  const currentEnd = typeof latexInput.selectionEnd === "number" ? latexInput.selectionEnd : currentStart;
+  if (isInputFocused && currentEnd > currentStart) {
+    return { start: currentStart, end: currentEnd };
+  }
+  const { start, end } = selectionSnapshot;
+  if (typeof start === "number" && typeof end === "number" && end > start && end <= latexInput.value.length) {
+    return { start, end };
+  }
+  return null;
+}
+
+function isWholeExpressionRange(range, source) {
+  return range.start === 0 && range.end === source.length;
+}
+
+function updateSelectionStatus() {
+  // Intentionally hidden in UI. Selection highlight in the input is the primary cue.
+}
+
+function findColorWrapperForSelection(source, range) {
+  const prefixStart = source.lastIndexOf("\\style{color:", range.start);
+  if (prefixStart < 0) {
+    return null;
+  }
+  const prefixText = source.slice(prefixStart, range.start);
+  const prefixMatch = prefixText.match(/^\\style\{color:#[0-9a-fA-F]{6}\}\{$/);
+  if (!prefixMatch) {
+    return null;
+  }
+  if (source.slice(range.end, range.end + 1) !== "}") {
+    return null;
+  }
+  return {
+    prefixStart,
+    prefixEnd: range.start,
+    suffixStart: range.end,
+    suffixEnd: range.end + 1
+  };
+}
+
+function setSelectionRangeAndSnapshot(start, end) {
+  const nextStart = Math.min(start, end);
+  const nextEnd = Math.max(start, end);
+  if (document.activeElement === latexInput) {
+    latexInput.setSelectionRange(nextStart, nextEnd);
+  }
+  selectionSnapshot = { start: nextStart, end: nextEnd };
+  updateSelectionStatus();
+}
+
+function applyColorToSelection(colorHex) {
+  const source = latexInput.value;
+  const range = getTargetSelectionRange();
+  if (!range || isWholeExpressionRange(range, source)) {
+    return false;
+  }
+  if (range.end <= range.start || range.end > source.length) {
+    return false;
+  }
+  const selected = source.slice(range.start, range.end);
+  if (!selected) {
+    return false;
+  }
+
+  const prefix = getInlineStylePrefix(colorHex);
+  const existingWrapper = findColorWrapperForSelection(source, range);
+  if (existingWrapper) {
+    const oldPrefixLength = existingWrapper.prefixEnd - existingWrapper.prefixStart;
+    latexInput.value = source.slice(0, existingWrapper.prefixStart) + prefix + source.slice(existingWrapper.prefixEnd);
+    const delta = prefix.length - oldPrefixLength;
+    const newRangeStart = range.start + delta;
+    const newRangeEnd = range.end + delta;
+    setSelectionRangeAndSnapshot(newRangeStart, newRangeEnd);
+    return true;
+  }
+
+  const wrapped = `${prefix}${selected}}`;
+  latexInput.value = source.slice(0, range.start) + wrapped + source.slice(range.end);
+  const newRangeStart = range.start + prefix.length;
+  const newRangeEnd = newRangeStart + selected.length;
+  setSelectionRangeAndSnapshot(newRangeStart, newRangeEnd);
+  return true;
+}
+
+function applyPickedColor(
+  colorHex,
+  { allowSelection = true, trackRecent = true, recordState = true, syncPicker = true, queueRecent = false } = {}
+) {
+  const normalized = setCurrentColor(colorHex, { trackRecent, updateBase: false, syncPicker });
+  if (!normalized) {
+    return false;
+  }
+  if (queueRecent) {
+    queueRecentColor(normalized);
+  }
+  let partialApplied = false;
+  if (allowSelection) {
+    partialApplied = applyColorToSelection(normalized);
+  }
+  if (!partialApplied) {
+    currentColorHex = normalized;
+  }
+  renderMath();
+  if (recordState) {
+    recordEditorState();
+  }
+  return true;
+}
+
+function insertAtCursor(text) {
+  const value = latexInput.value;
+  const limit = value.length;
+  const rawStart = typeof latexInput.selectionStart === "number" ? latexInput.selectionStart : limit;
+  const rawEnd = typeof latexInput.selectionEnd === "number" ? latexInput.selectionEnd : rawStart;
+  const start = clampRangePosition(Math.min(rawStart, rawEnd), limit);
+  const end = clampRangePosition(Math.max(rawStart, rawEnd), limit);
+  latexInput.value = value.slice(0, start) + text + value.slice(end);
+  const nextPos = start + text.length;
+  latexInput.focus();
+  setSelectionRangeAndSnapshot(nextPos, nextPos);
+  renderMath();
+  recordEditorState();
+}
+
+function wrapWithDelimiters(left, right) {
+  const source = latexInput.value;
+  const selectedRange = getTargetSelectionRange();
+  if (selectedRange && selectedRange.end > selectedRange.start && selectedRange.end <= source.length) {
+    const selectedText = source.slice(selectedRange.start, selectedRange.end);
+    const wrapped = `${left}${selectedText}${right}`;
+    latexInput.value = source.slice(0, selectedRange.start) + wrapped + source.slice(selectedRange.end);
+    latexInput.focus();
+    const innerStart = selectedRange.start + left.length;
+    const innerEnd = innerStart + selectedText.length;
+    setSelectionRangeAndSnapshot(innerStart, innerEnd);
+    renderMath();
+    recordEditorState();
+    return;
+  }
+
+  const limit = source.length;
+  const rawStart = typeof latexInput.selectionStart === "number" ? latexInput.selectionStart : limit;
+  const rawEnd = typeof latexInput.selectionEnd === "number" ? latexInput.selectionEnd : rawStart;
+  const start = clampRangePosition(Math.min(rawStart, rawEnd), limit);
+  const end = clampRangePosition(Math.max(rawStart, rawEnd), limit);
+  latexInput.value = source.slice(0, start) + left + right + source.slice(end);
+  const caret = start + left.length;
+  latexInput.focus();
+  setSelectionRangeAndSnapshot(caret, caret);
+  renderMath();
+  recordEditorState();
+}
+
+function applyMacroEntry(rawEntry) {
+  const entry = normalizeMacro(rawEntry);
+  if (entry && entry.wrap && typeof entry.wrap.left === "string" && typeof entry.wrap.right === "string") {
+    wrapWithDelimiters(entry.wrap.left, entry.wrap.right);
+    return;
+  }
+  insertAtCursor((entry && entry.insert) || "");
+}
+
+function setToggleState(button, open) {
+  button.innerHTML = `<span class="toggle-label">${open ? "Hide" : "Show"}</span><i class="fa-solid ${open ? "fa-chevron-up" : "fa-chevron-down"}"></i>`;
+}
+
+function setMacroOpen(open) {
+  macroContent.style.display = open ? "block" : "none";
+  macroContent.dataset.open = open ? "true" : "false";
+  setToggleState(toggleMacroBtn, open);
+}
+
+function isMacroOpen() {
+  return macroContent.dataset.open === "true";
+}
+
+function setHistoryOpen(open) {
+  historyViewport.style.display = open ? "block" : "none";
+  historyScrollBar.style.display = open ? "block" : "none";
+  setToggleState(toggleHistoryBtn, open);
+  if (open) {
+    historyScrollInner.style.width = historyContent.scrollWidth + "px";
+    historyScrollBar.scrollLeft = historyViewport.scrollLeft;
+  }
+}
+
+async function renderMath() {
+  previewContainer.innerHTML = "";
+  previewContainer.classList.remove("preview-error");
+  const latex = buildRenderableLatex(latexInput.value);
+  if (!latex) {
+    previewContainer.textContent = "";
+    return;
+  }
+
+  try {
+    const svg = await MathJax.tex2svgPromise(latex, { display: true });
+    const svgEl = svg.querySelector("svg");
+    const merrorNode = svgEl ? svgEl.querySelector('[data-mml-node="merror"]') : null;
+    if (merrorNode) {
+      const rawMessage = (merrorNode.textContent || "").replace(/\s+/g, " ").trim();
+      const normalizedMessage = rawMessage.replace(/^Error:\s*/i, "") || "Invalid LaTeX expression";
+      previewContainer.classList.add("preview-error");
+      previewContainer.textContent = `Error: ${normalizedMessage}`;
+      return;
+    }
+    svgEl.removeAttribute("style");
+    applySvgBaseColor(svgEl, currentColorHex);
+    previewContainer.appendChild(svgEl);
+  } catch (err) {
+    previewContainer.classList.add("preview-error");
+    previewContainer.textContent = "Error: " + err.message;
+  }
+}
+
+latexInput.addEventListener("keydown", (event) => {
+  const isModKey = event.ctrlKey || event.metaKey;
+  if (isModKey && event.key.toLowerCase() === "z") {
+    event.preventDefault();
+    if (event.shiftKey) {
+      redoEditorState();
+    } else {
+      undoEditorState();
+    }
+    return;
+  }
+  if (event.key === "Enter" && event.shiftKey) {
+    event.preventDefault();
+    const pos = latexInput.selectionStart;
+    latexInput.value = latexInput.value.slice(0, pos) + "\\\\" + latexInput.value.slice(pos);
+    latexInput.selectionStart = pos + 2;
+    latexInput.selectionEnd = pos + 2;
+    updateSelectionSnapshot();
+    renderMath();
+    recordEditorState();
+  }
+});
+
+async function svgToPng() {
+  const svgEl = previewContainer.querySelector("svg");
+  if (!svgEl) {
+    throw new Error("Nothing to convert");
+  }
+  const scale = getEffectiveResolutionScale();
+  const margin = 2;
+  const svgData = new XMLSerializer().serializeToString(svgEl);
+  const blob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const img = await new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = reject;
+    image.src = url;
+  });
+  const canvas = document.createElement("canvas");
+  canvas.width = (img.width + margin * 2) * scale;
+  canvas.height = (img.height + margin * 2) * scale;
+  const ctx = canvas.getContext("2d");
+  ctx.scale(scale, scale);
+  ctx.drawImage(img, margin, margin);
+  URL.revokeObjectURL(url);
+  return canvas;
+}
+
+function addToHistory(latex, color) {
+  const trimmed = latex.trim();
+  if (!trimmed) {
+    return;
+  }
+  const last = historyList[historyList.length - 1];
+  if (last && last.latex === trimmed && last.color === color) {
+    return;
+  }
+  historyList.push({ latex: trimmed, color });
+  if (historyList.length > LATEX_HISTORY_LIMIT) {
+    historyList.shift();
+  }
+  localStorage.setItem("latexHistory", JSON.stringify(historyList));
+  updateHistoryPanel();
+}
+
+async function updateHistoryPanel() {
+  historyContent.innerHTML = "";
+  const reversed = [...historyList].reverse();
+  for (const itemData of reversed) {
+    const item = document.createElement("div");
+    item.className = "history-item";
+    const preview = document.createElement("div");
+    preview.className = "history-preview";
+    try {
+      const previewLatex = buildRenderableLatex(itemData.latex);
+      const svg = await MathJax.tex2svgPromise(previewLatex, { display: true });
+      const svgEl = svg.querySelector("svg");
+      svgEl.removeAttribute("style");
+      applySvgBaseColor(svgEl, itemData.color || "#000000");
+      preview.appendChild(svgEl);
+    } catch (_ignored) {
+      preview.textContent = itemData.latex;
+    }
+    item.appendChild(preview);
+    item.addEventListener("click", () => {
+      latexInput.value = itemData.latex;
+      setCurrentColor(itemData.color || "#000000", { trackRecent: false });
+      updateSelectionSnapshot();
+      renderMath();
+      recordEditorState();
+      showToast("Restored");
+    });
+    historyContent.appendChild(item);
+  }
+
+  requestAnimationFrame(() => {
+    historyScrollInner.style.width = historyContent.scrollWidth + "px";
+    historyScrollBar.scrollLeft = historyViewport.scrollLeft;
+  });
+}
+
+historyScrollBar.addEventListener("scroll", () => {
+  historyViewport.scrollLeft = historyScrollBar.scrollLeft;
+});
+
+historyViewport.addEventListener("scroll", () => {
+  historyScrollBar.scrollLeft = historyViewport.scrollLeft;
+});
+
+window.addEventListener("resize", () => {
+  historyScrollInner.style.width = historyContent.scrollWidth + "px";
+});
+
+toggleHistoryBtn.addEventListener("click", () => {
+  const open = historyViewport.style.display !== "none";
+  setHistoryOpen(!open);
+});
+
+clearHistoryBtn.addEventListener("click", () => {
+  if (!confirm("Clear all history entries? This action cannot be undone.")) {
+    return;
+  }
+  historyList = [];
+  localStorage.removeItem("latexHistory");
+  updateHistoryPanel();
+});
+
+function normalizeMacro(raw) {
+  if (typeof raw === "string") {
+    return { insert: raw, preview: raw };
+  }
+  return raw;
+}
+
+function readCssNumberVar(name, fallback) {
+  const value = Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue(name));
+  return Number.isFinite(value) ? value : fallback;
+}
+
+function parseViewBoxDimensions(svgEl) {
+  const viewBox = svgEl.getAttribute("viewBox");
+  if (typeof viewBox !== "string") {
+    return null;
+  }
+  const parts = viewBox.trim().split(/\s+/).map((part) => Number.parseFloat(part));
+  if (parts.length !== 4 || parts.some((value) => !Number.isFinite(value))) {
+    return null;
+  }
+  return {
+    width: Math.abs(parts[2]),
+    height: Math.abs(parts[3])
+  };
+}
+
+function ensureMacroMeasureHost() {
+  if (macroMeasureHost) {
+    return macroMeasureHost;
+  }
+
+  macroMeasureHost = document.createElement("div");
+  macroMeasureHost.setAttribute("aria-hidden", "true");
+  Object.assign(macroMeasureHost.style, {
+    position: "fixed",
+    left: "-9999px",
+    top: "0",
+    width: "0",
+    height: "0",
+    overflow: "hidden",
+    visibility: "hidden",
+    pointerEvents: "none"
+  });
+  document.body.appendChild(macroMeasureHost);
+  return macroMeasureHost;
+}
+
+function measureMacroGlyphBox(svgEl) {
+  const host = ensureMacroMeasureHost();
+  const slot = document.createElement("div");
+  host.appendChild(slot);
+  slot.appendChild(svgEl);
+
+  try {
+    const mathNode = svgEl.querySelector("g[data-mml-node='math']") || svgEl.querySelector("g") || svgEl;
+    if (mathNode && typeof mathNode.getBBox === "function") {
+      const bbox = mathNode.getBBox();
+      if (Number.isFinite(bbox.width) && Number.isFinite(bbox.height) && bbox.width > 0 && bbox.height > 0) {
+        return { width: bbox.width, height: bbox.height };
+      }
+    }
+  } catch (_ignored) {
+    // Fallback to viewBox dimensions below when direct glyph bbox lookup fails.
+  } finally {
+    slot.remove();
+  }
+
+  return parseViewBoxDimensions(svgEl);
+}
+
+async function getMacroBaselineMetrics() {
+  if (!macroBaselineMetricsPromise) {
+    macroBaselineMetricsPromise = (async () => {
+      try {
+        const baselineSvgDoc = await MathJax.tex2svgPromise("x+y", { display: false });
+        const baselineSvg = baselineSvgDoc.querySelector("svg");
+        const measured = measureMacroGlyphBox(baselineSvg);
+        if (measured && measured.width > 0 && measured.height > 0) {
+          return measured;
+        }
+      } catch (_ignored) {
+        // Use a stable fallback if baseline measurement fails unexpectedly.
+      }
+      return { width: 1100, height: 430 };
+    })();
+  }
+  return macroBaselineMetricsPromise;
+}
+
+function resolveMacroMaxWidth(entry) {
+  if (Number.isFinite(entry.iconMaxWidth)) {
+    return Math.max(1, entry.iconMaxWidth);
+  }
+  const isCompact = typeof entry.className === "string" && entry.className.includes("macro-compact");
+  const isMatrix = typeof entry.className === "string" && entry.className.includes("macro-matrix");
+  if (isMatrix) {
+    return readCssNumberVar("--macro-icon-max-width-matrix", 50);
+  }
+  if (isCompact) {
+    return readCssNumberVar("--macro-icon-max-width-compact", 34);
+  }
+  return readCssNumberVar("--macro-icon-max-width", 42);
+}
+
+function resolveMacroHeightBounds(entry) {
+  const className = typeof entry.className === "string" ? entry.className : "";
+  const isCompact = className.includes("macro-compact");
+  const isMatrix = className.includes("macro-matrix");
+  let maxHeight;
+  let minHeight;
+  let nominalHeight;
+
+  if (isMatrix) {
+    maxHeight = readCssNumberVar("--macro-icon-max-height-matrix", 23);
+    minHeight = Math.min(maxHeight, readCssNumberVar("--macro-icon-min-height-matrix", 13));
+    nominalHeight = Math.max(
+      minHeight,
+      Math.min(maxHeight, readCssNumberVar("--macro-icon-nominal-height-matrix", 17))
+    );
+  } else if (isCompact) {
+    maxHeight = readCssNumberVar("--macro-icon-max-height-compact", 15);
+    minHeight = Math.min(maxHeight, readCssNumberVar("--macro-icon-min-height-compact", 8));
+    nominalHeight = Math.max(
+      minHeight,
+      Math.min(maxHeight, readCssNumberVar("--macro-icon-nominal-height-compact", 11))
+    );
+  } else {
+    maxHeight = readCssNumberVar("--macro-icon-max-height", 19);
+    minHeight = Math.min(maxHeight, readCssNumberVar("--macro-icon-min-height", 11));
+    nominalHeight = Math.max(
+      minHeight,
+      Math.min(maxHeight, readCssNumberVar("--macro-icon-nominal-height", 14))
+    );
+  }
+
+  if (Number.isFinite(entry.iconMaxHeight)) {
+    maxHeight = Math.max(1, entry.iconMaxHeight);
+  }
+  if (Number.isFinite(entry.iconMinHeight)) {
+    minHeight = Math.min(maxHeight, Math.max(1, entry.iconMinHeight));
+  } else {
+    minHeight = Math.min(maxHeight, minHeight);
+  }
+  if (Number.isFinite(entry.iconNominalHeight)) {
+    nominalHeight = Math.max(minHeight, Math.min(maxHeight, entry.iconNominalHeight));
+  } else {
+    nominalHeight = Math.max(minHeight, Math.min(maxHeight, nominalHeight));
+  }
+
+  return {
+    maxHeight,
+    minHeight,
+    nominalHeight
+  };
+}
+
+function applyMacroIconSizing(svgEl, entry, glyphBox, baselineMetrics) {
+  if (!glyphBox || !baselineMetrics) {
+    return;
+  }
+  if (!Number.isFinite(glyphBox.width) || !Number.isFinite(glyphBox.height) || glyphBox.width <= 0 || glyphBox.height <= 0) {
+    return;
+  }
+
+  const { maxHeight, minHeight, nominalHeight } = resolveMacroHeightBounds(entry);
+  const maxWidth = Math.max(1, resolveMacroMaxWidth(entry));
+  const baselineHeight = Math.max(1, baselineMetrics.height);
+  const iconScale = Number.isFinite(entry.iconScale) ? Math.max(0.7, Math.min(1.8, entry.iconScale)) : 1;
+
+  let targetHeight;
+  let targetWidth;
+
+  if (Math.abs(maxHeight - minHeight) < 0.01) {
+    // Fixed-height test mode: use one target height and only down-fit by width.
+    targetHeight = maxHeight;
+    targetWidth = targetHeight * (glyphBox.width / glyphBox.height);
+  } else {
+    // Normal mode: size from visible glyph box relative to a stable single-line baseline.
+    targetHeight = nominalHeight * (glyphBox.height / baselineHeight);
+    targetWidth = nominalHeight * (glyphBox.width / baselineHeight);
+
+    const readabilityFloor = Math.min(maxHeight, Math.max(7, minHeight * 0.58));
+    if (targetHeight < readabilityFloor) {
+      const boost = readabilityFloor / targetHeight;
+      targetHeight = readabilityFloor;
+      targetWidth *= boost;
+    }
+  }
+
+  if (!Number.isFinite(targetHeight) || !Number.isFinite(targetWidth) || targetHeight <= 0 || targetWidth <= 0) {
+    return;
+  }
+
+  targetHeight *= iconScale;
+  targetWidth *= iconScale;
+
+  const fitScale = Math.min(1, maxHeight / targetHeight, maxWidth / targetWidth);
+  const finalHeight = targetHeight * fitScale;
+  const finalWidth = targetWidth * fitScale;
+
+  svgEl.style.width = `${finalWidth.toFixed(2)}px`;
+  svgEl.style.height = `${finalHeight.toFixed(2)}px`;
+  svgEl.style.maxWidth = "none";
+  svgEl.style.maxHeight = "none";
+}
+
+async function createMacroButton(raw, inheritedClassName = "") {
+  const entry = normalizeMacro(raw);
+  const mergedClassName = [entry.className, inheritedClassName].filter(Boolean).join(" ").trim();
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "macro-btn" + (mergedClassName ? " " + mergedClassName : "");
+  const inferredSource = entry.wrap ? `${entry.wrap.left} ... ${entry.wrap.right}` : "";
+  const source = (entry.source || entry.insert || inferredSource || "").trim();
+  btn.dataset.latex = source;
+  btn.title = source;
+
+  const mathWrap = document.createElement("span");
+  mathWrap.className = "macro-math";
+  const previewText = entry.preview || entry.insert || source;
+  try {
+    const svg = await MathJax.tex2svgPromise(previewText, { display: false });
+    const svgEl = svg.querySelector("svg");
+    svgEl.removeAttribute("style");
+    const baselineMetrics = await getMacroBaselineMetrics();
+    const glyphBox = measureMacroGlyphBox(svgEl);
+    applyMacroIconSizing(svgEl, entry, glyphBox, baselineMetrics);
+    mathWrap.appendChild(svgEl);
+  } catch (_ignored) {
+    mathWrap.textContent = previewText;
+  }
+  btn.appendChild(mathWrap);
+
+  if (entry.label) {
+    const label = document.createElement("span");
+    label.className = "macro-label";
+    if (typeof entry.className === "string" && entry.className.includes("macro-matrix")) {
+      label.classList.add("preserve-case");
+    }
+    label.textContent = entry.label;
+    btn.appendChild(label);
+  }
+
+  btn.addEventListener("click", () => {
+    applyMacroEntry(entry);
+  });
+
+  return btn;
+}
+
+function getSectionsForTab(tabName) {
+  return macroCatalog[tabName] || [];
+}
+
+function getSubsectionStateIndex(tabName, total) {
+  if (!total) {
+    return 0;
+  }
+  const raw = subsectionIndexState[tabName];
+  if (!Number.isFinite(raw)) {
+    return 0;
+  }
+  const normalized = Math.trunc(raw);
+  if (normalized < 0) {
+    return 0;
+  }
+  if (normalized >= total) {
+    return total - 1;
+  }
+  return normalized;
+}
+
+function setSubsectionStateIndex(tabName, index) {
+  subsectionIndexState[tabName] = index;
+  localStorage.setItem("macroSubsectionIndexState", JSON.stringify(subsectionIndexState));
+}
+
+async function createButtonsForSection(section, renderId) {
+  const items = Array.isArray(section.items) ? section.items : [];
+  const inheritedClassName = typeof section.itemClassName === "string" ? section.itemClassName.trim() : "";
+  const buttons = await Promise.all(items.map((item) => createMacroButton(item, inheritedClassName)));
+  if (renderId !== macroRenderId) {
+    return null;
+  }
+  return buttons;
+}
+
+async function renderMacroButtons(tabName) {
+  const renderId = ++macroRenderId;
+  macroContent.innerHTML = "";
+
+  const sections = getSectionsForTab(tabName);
+  if (!sections.length) {
+    return;
+  }
+
+  if (sections.length === 1) {
+    const section = sections[0];
+    const group = document.createElement("article");
+    group.className = "macro-group";
+
+    const head = document.createElement("div");
+    head.className = "macro-group-head";
+
+    const title = document.createElement("h4");
+    title.className = "macro-group-title";
+    const titleLabel = document.createElement("span");
+    titleLabel.textContent = section.title;
+    title.appendChild(titleLabel);
+    head.appendChild(title);
+    group.appendChild(head);
+
+    const grid = document.createElement("div");
+    grid.className = "macro-grid";
+    const buttons = await createButtonsForSection(section, renderId);
+    if (renderId !== macroRenderId) {
+      return;
+    }
+    (buttons || []).forEach((button) => {
+      grid.appendChild(button);
+    });
+    group.appendChild(grid);
+    macroContent.appendChild(group);
+    return;
+  }
+
+  const group = document.createElement("article");
+  group.className = "macro-group";
+
+  const viewerHead = document.createElement("div");
+  viewerHead.className = "macro-viewer-head";
+
+  const prevBtn = document.createElement("button");
+  prevBtn.type = "button";
+  prevBtn.className = "macro-viewer-nav";
+  prevBtn.setAttribute("aria-label", "Previous subsection");
+  prevBtn.innerHTML = '<i class="fa-solid fa-chevron-left"></i>';
+
+  const nextBtn = document.createElement("button");
+  nextBtn.type = "button";
+  nextBtn.className = "macro-viewer-nav";
+  nextBtn.setAttribute("aria-label", "Next subsection");
+  nextBtn.innerHTML = '<i class="fa-solid fa-chevron-right"></i>';
+
+  const center = document.createElement("div");
+  center.className = "macro-viewer-center";
+
+  const currentName = document.createElement("span");
+  currentName.className = "macro-viewer-current";
+
+  const count = document.createElement("span");
+  count.className = "macro-viewer-count";
+  count.setAttribute("aria-live", "polite");
+
+  center.appendChild(currentName);
+  center.appendChild(count);
+
+  viewerHead.appendChild(prevBtn);
+  viewerHead.appendChild(center);
+  viewerHead.appendChild(nextBtn);
+  group.appendChild(viewerHead);
+
+  const strip = document.createElement("div");
+  strip.className = "macro-viewer-strip";
+  group.appendChild(strip);
+
+  const grid = document.createElement("div");
+  grid.className = "macro-grid";
+  group.appendChild(grid);
+  macroContent.appendChild(group);
+
+  const buttonCache = new Array(sections.length);
+  const chipButtons = sections.map((section, index) => {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "macro-viewer-chip";
+    chip.textContent = section.title;
+    chip.title = section.title;
+    chip.addEventListener("click", () => {
+      const sameSubsection = activeIndex === index;
+      if (sameSubsection) {
+        if (isMacroOpen()) {
+          setMacroOpen(false);
+          return;
+        }
+        setMacroOpen(true);
+      } else if (!isMacroOpen()) {
+        setMacroOpen(true);
+      }
+      void activateSubsection(index);
+    });
+    strip.appendChild(chip);
+    return chip;
+  });
+
+  let activeIndex = getSubsectionStateIndex(tabName, sections.length);
+
+  const updateHeader = (index) => {
+    currentName.textContent = sections[index].title;
+    count.textContent = `${index + 1}/${sections.length}`;
+    chipButtons.forEach((chip, chipIndex) => {
+      const isActive = chipIndex === index;
+      chip.classList.toggle("active", isActive);
+      chip.setAttribute("aria-current", isActive ? "true" : "false");
+    });
+  };
+
+  const getButtonsForIndex = async (index) => {
+    if (!buttonCache[index]) {
+      buttonCache[index] = createButtonsForSection(sections[index], renderId);
+    }
+    return buttonCache[index];
+  };
+
+  const activateSubsection = async (rawIndex) => {
+    const index = Math.max(0, Math.min(sections.length - 1, rawIndex));
+    activeIndex = index;
+    setSubsectionStateIndex(tabName, index);
+    updateHeader(index);
+    const buttons = await getButtonsForIndex(index);
+    if (renderId !== macroRenderId || !buttons) {
+      return;
+    }
+    grid.replaceChildren(...buttons);
+  };
+
+  prevBtn.addEventListener("click", () => {
+    if (sections.length < 2) {
+      return;
+    }
+    const nextIndex = (activeIndex - 1 + sections.length) % sections.length;
+    void activateSubsection(nextIndex);
+  });
+  nextBtn.addEventListener("click", () => {
+    if (sections.length < 2) {
+      return;
+    }
+    const nextIndex = (activeIndex + 1) % sections.length;
+    void activateSubsection(nextIndex);
+  });
+
+  await activateSubsection(activeIndex);
+  if (renderId !== macroRenderId) {
+    return;
+  }
+
+  for (const [index] of sections.entries()) {
+    if (index === activeIndex) {
+      continue;
+    }
+    void getButtonsForIndex(index);
+  }
+}
+
+macroTabs.addEventListener("click", (event) => {
+  const targetButton = event.target.closest("button");
+  if (!targetButton || !macroTabs.contains(targetButton)) {
+    return;
+  }
+  if (!targetButton.dataset.tab) {
+    return;
+  }
+
+  const targetTab = targetButton.dataset.tab;
+  const sameTab = targetTab === currentTab;
+  if (sameTab) {
+    if (isMacroOpen()) {
+      setMacroOpen(false);
+      return;
+    }
+    setMacroOpen(true);
+    renderMacroButtons(currentTab);
+    return;
+  }
+
+  macroTabs.querySelectorAll("button[data-tab]").forEach((button) => button.classList.remove("active"));
+  targetButton.classList.add("active");
+  currentTab = targetTab;
+  setMacroOpen(true);
+  renderMacroButtons(currentTab);
+});
+
+toggleMacroBtn.addEventListener("click", () => {
+  const open = macroContent.style.display !== "none";
+  setMacroOpen(!open);
+});
+
+colorPanelToggle.addEventListener("mousedown", (event) => {
+  event.preventDefault();
+});
+
+colorPanelToggle.addEventListener("click", () => {
+  const open = colorPanel.classList.contains("open");
+  if (!open) {
+    setHelpPanelOpen(false);
+  }
+  setColorPanelOpen(!open);
+  updateSelectionStatus();
+});
+
+helpToggleBtn.addEventListener("mousedown", (event) => {
+  event.preventDefault();
+});
+
+helpToggleBtn.addEventListener("click", () => {
+  const open = helpPanel.classList.contains("open");
+  if (!open) {
+    setColorPanelOpen(false);
+  }
+  setHelpPanelOpen(!open);
+});
+
+eyedropperBtn.addEventListener("mousedown", (event) => {
+  event.preventDefault();
+});
+
+eyedropperBtn.addEventListener("click", async () => {
+  if (typeof EyeDropper === "undefined") {
+    showToast("Eyedropper is not supported in this browser");
+    return;
+  }
+  try {
+    const eyeDropper = new EyeDropper();
+    const picked = await eyeDropper.open();
+    const pickedHex = normalizeHex(picked && picked.sRGBHex ? picked.sRGBHex : "");
+    if (!pickedHex) {
+      return;
+    }
+    applyPickedColor(pickedHex, {
+      allowSelection: true,
+      trackRecent: false,
+      queueRecent: true,
+      recordState: true
+    });
+  } catch (err) {
+    if (err && err.name === "AbortError") {
+      return;
+    }
+    showToast("Eyedropper failed");
+  }
+});
+
+function tryApplyRgbInputColor() {
+  const r = clampByte(rgbR.value);
+  const g = clampByte(rgbG.value);
+  const b = clampByte(rgbB.value);
+  if (r === null || g === null || b === null) {
+    return;
+  }
+  applyPickedColor(rgbToHex(r, g, b), {
+    allowSelection: true,
+    trackRecent: false,
+    queueRecent: true
+  });
+}
+
+function tryApplyHexInputColor() {
+  const normalized = normalizeHex(hexInput.value);
+  if (normalized) {
+    applyPickedColor(normalized, {
+      allowSelection: true,
+      trackRecent: false,
+      queueRecent: true
+    });
+    return true;
+  }
+  return false;
+}
+
+hexInput.addEventListener("change", () => {
+  if (!tryApplyHexInputColor()) {
+    syncColorInputs(currentColorHex);
+  }
+});
+
+hexInput.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    if (!tryApplyHexInputColor()) {
+      syncColorInputs(currentColorHex);
+    }
+  }
+});
+
+[rgbR, rgbG, rgbB].forEach((input) => {
+  input.addEventListener("change", tryApplyRgbInputColor);
+  input.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      tryApplyRgbInputColor();
+    }
+  });
+  input.addEventListener("blur", () => {
+    syncColorInputs(currentColorHex);
+  });
+});
+
+function applyColorFromPickerState(options = {}) {
+  const rgb = hsvToRgb(pickerState.h, pickerState.s, pickerState.v);
+  applyPickedColor(rgbToHex(rgb.r, rgb.g, rgb.b), {
+    allowSelection: true,
+    trackRecent: false,
+    queueRecent: true,
+    recordState: false,
+    syncPicker: false,
+    ...options
+  });
+}
+
+function updateSvFromPointer(event) {
+  const rect = svPanel.getBoundingClientRect();
+  if (rect.width <= 0 || rect.height <= 0) {
+    return;
+  }
+  const x = Math.min(rect.width, Math.max(0, event.clientX - rect.left));
+  const y = Math.min(rect.height, Math.max(0, event.clientY - rect.top));
+  pickerState.s = x / rect.width;
+  pickerState.v = 1 - y / rect.height;
+  applyColorFromPickerState();
+}
+
+function updateHueFromPointer(event) {
+  const rect = huePanel.getBoundingClientRect();
+  if (rect.width <= 0) {
+    return;
+  }
+  const x = Math.min(rect.width, Math.max(0, event.clientX - rect.left));
+  const normalized = x / rect.width;
+  pickerState.h = normalized >= 1 ? 359.999 : normalized * 360;
+  applyColorFromPickerState();
+}
+
+let svPointerId = null;
+svPanel.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  svPointerId = event.pointerId;
+  svPanel.setPointerCapture(event.pointerId);
+  updateSvFromPointer(event);
+});
+svPanel.addEventListener("pointermove", (event) => {
+  if (svPointerId !== event.pointerId) {
+    return;
+  }
+  updateSvFromPointer(event);
+});
+const stopSvDrag = (event) => {
+  if (svPointerId !== event.pointerId) {
+    return;
+  }
+  applyColorFromPickerState({ recordState: true, syncPicker: false });
+  svPointerId = null;
+  if (svPanel.hasPointerCapture(event.pointerId)) {
+    svPanel.releasePointerCapture(event.pointerId);
+  }
+};
+svPanel.addEventListener("pointerup", stopSvDrag);
+svPanel.addEventListener("pointercancel", stopSvDrag);
+
+let huePointerId = null;
+huePanel.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  huePointerId = event.pointerId;
+  huePanel.setPointerCapture(event.pointerId);
+  updateHueFromPointer(event);
+});
+huePanel.addEventListener("pointermove", (event) => {
+  if (huePointerId !== event.pointerId) {
+    return;
+  }
+  updateHueFromPointer(event);
+});
+const stopHueDrag = (event) => {
+  if (huePointerId !== event.pointerId) {
+    return;
+  }
+  applyColorFromPickerState({ recordState: true, syncPicker: false });
+  huePointerId = null;
+  if (huePanel.hasPointerCapture(event.pointerId)) {
+    huePanel.releasePointerCapture(event.pointerId);
+  }
+};
+huePanel.addEventListener("pointerup", stopHueDrag);
+huePanel.addEventListener("pointercancel", stopHueDrag);
+
+latexInput.addEventListener("select", updateSelectionSnapshot);
+latexInput.addEventListener("mouseup", updateSelectionSnapshot);
+latexInput.addEventListener("keyup", updateSelectionSnapshot);
+latexInput.addEventListener("click", updateSelectionSnapshot);
+
+document.addEventListener("click", (event) => {
+  const inColorPanel = colorPanel.contains(event.target);
+  const onColorToggle = event.target.closest("#colorPanelToggle");
+  if (!inColorPanel && !onColorToggle) {
+    setColorPanelOpen(false);
+  }
+
+  const inHelpPanel = helpPanel.contains(event.target);
+  const onHelpToggle = event.target.closest("#helpToggleBtn");
+  if (!inHelpPanel && !onHelpToggle) {
+    setHelpPanelOpen(false);
+  }
+});
+
+copyBtn.addEventListener("click", async () => {
+  try {
+    const canvas = await svgToPng();
+    canvas.toBlob(async (blob) => {
+      if (!blob || !navigator.clipboard || typeof ClipboardItem === "undefined") {
+        showToast("Copy failed");
+        return;
+      }
+      await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+      showToast("Copied");
+      addToHistory(latexInput.value, currentColorHex);
+    });
+  } catch (_ignored) {
+    showToast("Copy failed");
+  }
+});
+
+downloadBtn.addEventListener("click", async () => {
+  try {
+    const canvas = await svgToPng();
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        showToast("Download failed");
+        return;
+      }
+      const a = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      a.href = url;
+      a.download = "latex.png";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 500);
+    });
+    addToHistory(latexInput.value, currentColorHex);
+  } catch (_ignored) {
+    showToast("Download failed");
+  }
+});
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute("data-theme", theme);
+  themeToggle.innerHTML = `<i class="fa-solid ${theme === "dark" ? "fa-sun" : "fa-moon"}"></i>`;
+}
+
+themeToggle.addEventListener("click", () => {
+  const current = document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
+  const next = current === "dark" ? "light" : "dark";
+  applyTheme(next);
+  localStorage.setItem("latexTheme", next);
+});
+
+if (footerLinkBtn) {
+  footerLinkBtn.addEventListener("click", () => {
+    window.open("https://kwonyos.github.io/", "_blank", "noopener,noreferrer");
+  });
+}
+
+let typingTimeout;
+latexInput.addEventListener("input", () => {
+  if (isRestoringEditorState) {
+    return;
+  }
+  updateSelectionSnapshot();
+  recordEditorState();
+  clearTimeout(typingTimeout);
+  typingTimeout = setTimeout(renderMath, 180);
+});
+
+function init() {
+  const savedTheme = localStorage.getItem("latexTheme");
+  applyTheme(savedTheme === "dark" ? "dark" : "light");
+  updateResLabel();
+  historyList = historyList.slice(-LATEX_HISTORY_LIMIT);
+  localStorage.setItem("latexHistory", JSON.stringify(historyList));
+  subsectionIndexState = subsectionIndexState && typeof subsectionIndexState === "object" && !Array.isArray(subsectionIndexState)
+    ? Object.fromEntries(
+      Object.entries(subsectionIndexState)
+        .map(([tabName, rawIndex]) => [tabName, Math.max(0, Math.trunc(Number(rawIndex)))])
+        .filter(([, index]) => Number.isFinite(index))
+    )
+    : {};
+  localStorage.removeItem("macroSectionOpenState");
+  localStorage.setItem("macroSubsectionIndexState", JSON.stringify(subsectionIndexState));
+  recentColors = recentColors
+    .map((entry) => normalizeHex(String(entry || "")))
+    .filter(Boolean)
+    .filter((entry, index, array) => array.indexOf(entry) === index)
+    .slice(0, RECENT_COLOR_LIMIT);
+  if (recentColors.length === 0) {
+    recentColors = ["#000000"];
+  }
+  localStorage.setItem("recentColors", JSON.stringify(recentColors));
+  renderRecentColors();
+  setCurrentColor("#000000", { trackRecent: false });
+  setColorPanelOpen(false);
+  setHelpPanelOpen(false);
+  setMacroOpen(false);
+  setHistoryOpen(false);
+  updateSelectionSnapshot();
+  renderMacroButtons("greek");
+  renderMath();
+  resetEditorHistory();
+  updateHistoryPanel();
+}
+
+window.addEventListener("DOMContentLoaded", init);
+</script>
+</body>
+</html>
