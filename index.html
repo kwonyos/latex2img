@@ -9,11 +9,11 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.2.0/css/all.min.css">
 <script>
 window.MathJax = {
+  loader: {
+    load: ["[tex]/color"]
+  },
   tex: {
-    packages: { "[+]": ["color"] },
-    macros: {
-      style: ["\\bbox[border:0px;#1]{#2}", 2]
-    }
+    packages: { "[+]": ["color"] }
   }
 };
 </script>
@@ -2066,11 +2066,174 @@ function hsvToRgb(h, s, v) {
 
 function getInlineStylePrefix(hex) {
   const normalized = normalizeHex(hex) || "#000000";
-  return `\\style{color:${normalized}}{`;
+  return `\\textcolor{${normalized}}{`;
+}
+
+function migrateLegacyInlineHexColors(source) {
+  if (typeof source !== "string" || !source) {
+    return source;
+  }
+
+  const rgbToTextColorModel = (rToken, gToken, bToken) => {
+    const r = Math.max(0, Math.min(255, Number.parseInt(rToken, 10) || 0));
+    const g = Math.max(0, Math.min(255, Number.parseInt(gToken, 10) || 0));
+    const b = Math.max(0, Math.min(255, Number.parseInt(bToken, 10) || 0));
+    return `\\textcolor[RGB]{${r},${g},${b}}{`;
+  };
+
+  const hexToTextColorModel = (hexToken) => {
+    const compact = String(hexToken || "").trim();
+    const expanded = compact.length === 3
+      ? compact.split("").map((ch) => ch + ch).join("")
+      : compact;
+    const rgb = hexToRgb(`#${expanded}`);
+    if (!rgb) {
+      return null;
+    }
+    return `\\textcolor[RGB]{${rgb.r},${rgb.g},${rgb.b}}{`;
+  };
+
+  const migrateRgbToCanonical = (_full, rToken, gToken, bToken) => rgbToTextColorModel(rToken, gToken, bToken);
+
+  const migrateHexToCanonical = (_full, hexToken) => {
+    const converted = hexToTextColorModel(hexToken);
+    if (!converted) {
+      return _full;
+    }
+    return converted;
+  };
+
+  let migrated = source;
+
+  migrated = migrated.replace(/\\style\{color:#([0-9a-fA-F]{6})\}\{/g, migrateHexToCanonical);
+  migrated = migrated.replace(/\\style\{color:#([0-9a-fA-F]{3})\}\{/g, migrateHexToCanonical);
+
+  migrated = migrated.replace(
+    /\\style\{color:rgb\(\s*([0-9]{1,3})\s+([0-9]{1,3})\s+([0-9]{1,3})\s*\)\}\{/g,
+    migrateRgbToCanonical
+  );
+
+  migrated = migrated.replace(
+    /\\style\{color:rgb\(\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*\)\}\{/g,
+    migrateRgbToCanonical
+  );
+
+  migrated = migrated.replace(
+    /\\style\{rgb\(\s*([0-9]{1,3})\s+([0-9]{1,3})\s+([0-9]{1,3})\s*\)\}\{/g,
+    migrateRgbToCanonical
+  );
+
+  migrated = migrated.replace(
+    /\\style\{rgb\(\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*\)\}\{/g,
+    migrateRgbToCanonical
+  );
+
+  migrated = migrated.replace(
+    /\\localcolor\{rgb\(\s*([0-9]{1,3})\s+([0-9]{1,3})\s+([0-9]{1,3})\s*\)\}\{/g,
+    migrateRgbToCanonical
+  );
+
+  migrated = migrated.replace(
+    /\\localcolor\{rgb\(\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*\)\}\{/g,
+    migrateRgbToCanonical
+  );
+
+  migrated = migrated.replace(
+    /\\textcolor\{rgb\(\s*([0-9]{1,3})\s+([0-9]{1,3})\s+([0-9]{1,3})\s*\)\}\{/g,
+    migrateRgbToCanonical
+  );
+
+  migrated = migrated.replace(
+    /\\textcolor\{rgb\(\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*\)\}\{/g,
+    migrateRgbToCanonical
+  );
+
+  migrated = migrated.replace(
+    /\\textcolor\[RGB\]\{\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*\}\{/g,
+    migrateRgbToCanonical
+  );
+
+  migrated = migrated.replace(
+    /\\textcolor\{\s*(?:\\string)?\\?#([0-9a-fA-F]{6})\s*\}\{/g,
+    migrateHexToCanonical
+  );
+
+  migrated = migrated.replace(
+    /\\textcolor\{\s*(?:\\string)?\\?#([0-9a-fA-F]{3})\s*\}\{/g,
+    migrateHexToCanonical
+  );
+
+  return migrated;
+}
+
+function getMathJaxTexConverter() {
+  const mj = window.MathJax;
+  if (!mj) {
+    return null;
+  }
+  if (typeof mj.tex2svgPromise === "function") {
+    return (latex, options) => mj.tex2svgPromise(latex, options);
+  }
+  if (typeof mj.tex2svg === "function") {
+    return (latex, options) => Promise.resolve(mj.tex2svg(latex, options));
+  }
+  return null;
+}
+
+let mathJaxReadyPromise = null;
+function ensureMathJaxReady(timeoutMs = 15000) {
+  if (getMathJaxTexConverter()) {
+    return Promise.resolve();
+  }
+  if (mathJaxReadyPromise) {
+    return mathJaxReadyPromise;
+  }
+
+  mathJaxReadyPromise = new Promise((resolve, reject) => {
+    const started = Date.now();
+    const poll = () => {
+      if (getMathJaxTexConverter()) {
+        resolve();
+        return;
+      }
+
+      const mj = window.MathJax;
+      if (mj && mj.startup && mj.startup.promise && typeof mj.startup.promise.then === "function") {
+        mj.startup.promise.then(() => {
+          if (getMathJaxTexConverter()) {
+            resolve();
+          } else {
+            reject(new Error("MathJax loaded but TeX SVG converter is unavailable"));
+          }
+        }).catch((err) => {
+          reject(new Error(`MathJax startup failed: ${err && err.message ? err.message : err}`));
+        });
+        return;
+      }
+
+      if (Date.now() - started >= timeoutMs) {
+        reject(new Error("MathJax failed to initialize"));
+        return;
+      }
+      setTimeout(poll, 50);
+    };
+    poll();
+  });
+
+  return mathJaxReadyPromise;
+}
+
+async function texToSvg(latex, options) {
+  await ensureMathJaxReady();
+  const converter = getMathJaxTexConverter();
+  if (!converter) {
+    throw new Error("MathJax TeX SVG converter unavailable");
+  }
+  return converter(latex, options);
 }
 
 function buildRenderableLatex(sourceLatex) {
-  let latex = (sourceLatex || "").trim();
+  let latex = migrateLegacyInlineHexColors((sourceLatex || "").trim());
   if (!latex) {
     return "";
   }
@@ -2322,12 +2485,23 @@ function updateSelectionStatus() {
 }
 
 function findColorWrapperForSelection(source, range) {
-  const prefixStart = source.lastIndexOf("\\style{color:", range.start);
+  const textColorRgbPrefixStart = source.lastIndexOf("\\textcolor[RGB]{", range.start);
+  const textColorPrefixStart = source.lastIndexOf("\\textcolor{", range.start);
+  const localPrefixStart = source.lastIndexOf("\\localcolor{", range.start);
+  const legacyPrefixStart = source.lastIndexOf("\\style{", range.start);
+  const prefixStart = Math.max(
+    textColorRgbPrefixStart,
+    textColorPrefixStart,
+    localPrefixStart,
+    legacyPrefixStart
+  );
   if (prefixStart < 0) {
     return null;
   }
   const prefixText = source.slice(prefixStart, range.start);
-  const prefixMatch = prefixText.match(/^\\style\{color:#[0-9a-fA-F]{6}\}\{$/);
+  const prefixMatch = prefixText.match(
+    /^(?:\\textcolor(?:\[[^\[\]{}]+\])?\{[^{}]+\}\{|\\(?:localcolor|style)\{[^{}]+\}\{)$/
+  );
   if (!prefixMatch) {
     return null;
   }
@@ -2498,7 +2672,7 @@ async function renderMath() {
   }
 
   try {
-    const svg = await MathJax.tex2svgPromise(latex, { display: true });
+    const svg = await texToSvg(latex, { display: true });
     const svgEl = svg.querySelector("svg");
     const merrorNode = svgEl ? svgEl.querySelector('[data-mml-node="merror"]') : null;
     if (merrorNode) {
@@ -2593,7 +2767,7 @@ async function updateHistoryPanel() {
     preview.className = "history-preview";
     try {
       const previewLatex = buildRenderableLatex(itemData.latex);
-      const svg = await MathJax.tex2svgPromise(previewLatex, { display: true });
+      const svg = await texToSvg(previewLatex, { display: true });
       const svgEl = svg.querySelector("svg");
       svgEl.removeAttribute("style");
       applySvgBaseColor(svgEl, itemData.color || "#000000");
@@ -2720,7 +2894,7 @@ async function getMacroBaselineMetrics() {
   if (!macroBaselineMetricsPromise) {
     macroBaselineMetricsPromise = (async () => {
       try {
-        const baselineSvgDoc = await MathJax.tex2svgPromise("x+y", { display: false });
+        const baselineSvgDoc = await texToSvg("x+y", { display: false });
         const baselineSvg = baselineSvgDoc.querySelector("svg");
         const measured = measureMacroGlyphBox(baselineSvg);
         if (measured && measured.width > 0 && measured.height > 0) {
@@ -2867,7 +3041,7 @@ async function createMacroButton(raw, inheritedClassName = "") {
   mathWrap.className = "macro-math";
   const previewText = entry.preview || entry.insert || source;
   try {
-    const svg = await MathJax.tex2svgPromise(previewText, { display: false });
+    const svg = await texToSvg(previewText, { display: false });
     const svgEl = svg.querySelector("svg");
     svgEl.removeAttribute("style");
     const baselineMetrics = await getMacroBaselineMetrics();
