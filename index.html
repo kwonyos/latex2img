@@ -735,6 +735,38 @@ button:focus-visible {
   color: var(--btn-text);
 }
 
+.segmented {
+  display: inline-flex;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  background: var(--bg);
+  padding: 2px;
+  margin-left: auto;
+  align-self: center;
+}
+
+.segmented-option {
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  border-radius: var(--radius-pill);
+  transition: color 0.2s, background 0.25s;
+}
+
+.segmented-option:hover {
+  color: var(--text);
+}
+
+.segmented-option.active {
+  background: var(--btn-bg);
+  color: var(--btn-text);
+}
+
 #macroPanel {
   position: relative;
 }
@@ -1333,7 +1365,7 @@ button:focus-visible {
 
 <header class="page-header">
   <h1>LaTeX to Image</h1>
-  <p>Render equations, then copy or download as PNG.</p>
+  <p>Render equations, then copy or download as PNG or SVG.</p>
 </header>
 
 <section class="tool-card">
@@ -1407,8 +1439,12 @@ button:focus-visible {
   </div>
 
   <div class="button-group">
-    <button id="copyBtn" class="tool-btn"><i class="fa-regular fa-copy"></i><span>Copy PNG</span></button>
-    <button id="downloadBtn" class="tool-btn"><i class="fa-solid fa-download"></i><span>Download PNG</span></button>
+    <button id="copyBtn" class="tool-btn"><i class="fa-regular fa-copy"></i><span>Copy</span></button>
+    <button id="downloadBtn" class="tool-btn"><i class="fa-solid fa-download"></i><span>Download</span></button>
+    <div id="formatSelector" class="segmented" role="radiogroup" aria-label="Export format">
+      <button type="button" class="segmented-option" role="radio" aria-checked="false" data-format="png">PNG</button>
+      <button type="button" class="segmented-option active" role="radio" aria-checked="true" data-format="svg">SVG</button>
+    </div>
   </div>
 </section>
 
@@ -1462,6 +1498,8 @@ const resNum = document.getElementById("resNum");
 const previewContainer = document.getElementById("previewContainer");
 const copyBtn = document.getElementById("copyBtn");
 const downloadBtn = document.getElementById("downloadBtn");
+const formatSelector = document.getElementById("formatSelector");
+let currentExportFormat = "svg";
 const toast = document.getElementById("toast");
 const themeToggle = document.getElementById("themeToggle");
 const colorPanelToggle = document.getElementById("colorPanelToggle");
@@ -2714,30 +2752,88 @@ latexInput.addEventListener("keydown", (event) => {
   }
 });
 
-async function svgToPng() {
+const EXPORT_MARGIN_PX = 2;
+
+function buildExportSvgNode() {
   const svgEl = previewContainer.querySelector("svg");
   if (!svgEl) {
     throw new Error("Nothing to convert");
   }
+  const clone = svgEl.cloneNode(true);
+  const rect = svgEl.getBoundingClientRect();
+  const naturalWidth = rect.width || parseFloat(svgEl.getAttribute("width")) || 1;
+  const naturalHeight = rect.height || parseFloat(svgEl.getAttribute("height")) || 1;
+
+  let vbX = 0, vbY = 0, vbW = naturalWidth, vbH = naturalHeight;
+  const rawViewBox = clone.getAttribute("viewBox");
+  if (rawViewBox) {
+    const parts = rawViewBox.trim().split(/[\s,]+/).map(parseFloat);
+    if (parts.length === 4 && parts.every(Number.isFinite)) {
+      [vbX, vbY, vbW, vbH] = parts;
+    }
+  }
+
+  const ratioX = naturalWidth > 0 ? vbW / naturalWidth : 1;
+  const ratioY = naturalHeight > 0 ? vbH / naturalHeight : 1;
+  const marginUnitsX = EXPORT_MARGIN_PX * ratioX;
+  const marginUnitsY = EXPORT_MARGIN_PX * ratioY;
+
+  const newVbX = vbX - marginUnitsX;
+  const newVbY = vbY - marginUnitsY;
+  const newVbW = vbW + 2 * marginUnitsX;
+  const newVbH = vbH + 2 * marginUnitsY;
+  clone.setAttribute("viewBox", `${newVbX} ${newVbY} ${newVbW} ${newVbH}`);
+
+  clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+  if (!clone.getAttribute("xmlns:xlink")) {
+    clone.setAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink");
+  }
+
+  applySvgBaseColor(clone, currentColorHex);
+
+  return {
+    clone,
+    cssWidth: naturalWidth + 2 * EXPORT_MARGIN_PX,
+    cssHeight: naturalHeight + 2 * EXPORT_MARGIN_PX,
+  };
+}
+
+function buildStandaloneSvgString({ forRaster = false } = {}) {
+  const { clone, cssWidth, cssHeight } = buildExportSvgNode();
+  const scale = forRaster ? 1 : getEffectiveResolutionScale();
+  const outWidth = cssWidth * scale;
+  const outHeight = cssHeight * scale;
+  clone.setAttribute("width", `${outWidth}`);
+  clone.setAttribute("height", `${outHeight}`);
+  const xml = new XMLSerializer().serializeToString(clone);
+  return {
+    xml: `<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n${xml}`,
+    cssWidth,
+    cssHeight,
+  };
+}
+
+async function svgToPng() {
   const scale = getEffectiveResolutionScale();
-  const margin = 2;
-  const svgData = new XMLSerializer().serializeToString(svgEl);
-  const blob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
+  const { xml, cssWidth, cssHeight } = buildStandaloneSvgString({ forRaster: true });
+  const blob = new Blob([xml], { type: "image/svg+xml;charset=utf-8" });
   const url = URL.createObjectURL(blob);
-  const img = await new Promise((resolve, reject) => {
-    const image = new Image();
-    image.onload = () => resolve(image);
-    image.onerror = reject;
-    image.src = url;
-  });
-  const canvas = document.createElement("canvas");
-  canvas.width = (img.width + margin * 2) * scale;
-  canvas.height = (img.height + margin * 2) * scale;
-  const ctx = canvas.getContext("2d");
-  ctx.scale(scale, scale);
-  ctx.drawImage(img, margin, margin);
-  URL.revokeObjectURL(url);
-  return canvas;
+  try {
+    const img = await new Promise((resolve, reject) => {
+      const image = new Image();
+      image.onload = () => resolve(image);
+      image.onerror = reject;
+      image.src = url;
+    });
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(cssWidth * scale));
+    canvas.height = Math.max(1, Math.round(cssHeight * scale));
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    return canvas;
+  } finally {
+    URL.revokeObjectURL(url);
+  }
 }
 
 function addToHistory(latex, color) {
@@ -3523,18 +3619,79 @@ document.addEventListener("click", (event) => {
   }
 });
 
+function setExportFormat(format) {
+  if (format !== "png" && format !== "svg") {
+    return;
+  }
+  currentExportFormat = format;
+  formatSelector.querySelectorAll(".segmented-option").forEach((btn) => {
+    const isActive = btn.dataset.format === format;
+    btn.classList.toggle("active", isActive);
+    btn.setAttribute("aria-checked", isActive ? "true" : "false");
+  });
+}
+
+formatSelector.addEventListener("click", (event) => {
+  const btn = event.target.closest(".segmented-option");
+  if (!btn) {
+    return;
+  }
+  setExportFormat(btn.dataset.format);
+});
+
+function triggerDownload(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 500);
+}
+
+async function copyPngBlob() {
+  const canvas = await svgToPng();
+  const blob = await new Promise((resolve) => canvas.toBlob(resolve));
+  if (!blob || !navigator.clipboard || typeof ClipboardItem === "undefined") {
+    throw new Error("Clipboard unavailable");
+  }
+  await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+}
+
+async function copySvgToClipboard(svgString) {
+  if (navigator.clipboard && typeof ClipboardItem !== "undefined" && navigator.clipboard.write) {
+    try {
+      const supportsSvg = typeof ClipboardItem.supports === "function"
+        ? ClipboardItem.supports("image/svg+xml")
+        : true;
+      if (supportsSvg) {
+        const blob = new Blob([svgString], { type: "image/svg+xml" });
+        await navigator.clipboard.write([new ClipboardItem({ "image/svg+xml": blob })]);
+        return "svg";
+      }
+    } catch (_ignored) {
+      // fall through to text fallback
+    }
+  }
+  if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
+    await navigator.clipboard.writeText(svgString);
+    return "text";
+  }
+  throw new Error("Clipboard unavailable");
+}
+
 copyBtn.addEventListener("click", async () => {
   try {
-    const canvas = await svgToPng();
-    canvas.toBlob(async (blob) => {
-      if (!blob || !navigator.clipboard || typeof ClipboardItem === "undefined") {
-        showToast("Copy failed");
-        return;
-      }
-      await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+    if (currentExportFormat === "svg") {
+      const { xml } = buildStandaloneSvgString();
+      const mode = await copySvgToClipboard(xml);
+      showToast(mode === "svg" ? "Copied" : "Copied SVG source (image copy not supported)");
+    } else {
+      await copyPngBlob();
       showToast("Copied");
-      addToHistory(latexInput.value, currentColorHex);
-    });
+    }
+    addToHistory(latexInput.value, currentColorHex);
   } catch (_ignored) {
     showToast("Copy failed");
   }
@@ -3542,21 +3699,17 @@ copyBtn.addEventListener("click", async () => {
 
 downloadBtn.addEventListener("click", async () => {
   try {
-    const canvas = await svgToPng();
-    canvas.toBlob((blob) => {
+    if (currentExportFormat === "svg") {
+      const { xml } = buildStandaloneSvgString();
+      triggerDownload(new Blob([xml], { type: "image/svg+xml;charset=utf-8" }), "latex.svg");
+    } else {
+      const canvas = await svgToPng();
+      const blob = await new Promise((resolve) => canvas.toBlob(resolve));
       if (!blob) {
-        showToast("Download failed");
-        return;
+        throw new Error("Encode failed");
       }
-      const a = document.createElement("a");
-      const url = URL.createObjectURL(blob);
-      a.href = url;
-      a.download = "latex.png";
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 500);
-    });
+      triggerDownload(blob, "latex.png");
+    }
     addToHistory(latexInput.value, currentColorHex);
   } catch (_ignored) {
     showToast("Download failed");
